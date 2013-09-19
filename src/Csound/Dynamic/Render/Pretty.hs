@@ -1,6 +1,6 @@
 module Csound.Dynamic.Render.Pretty(
     Doc, vcatSep,
-    ppCsdFile, ppGen, ppNotes, ppInstr, ppStmt
+    ppCsdFile, ppGen, ppNotes, ppInstr, ppStmt, ppTotalDur
 ) where
 
 import Control.Monad.Trans.State.Strict
@@ -49,7 +49,7 @@ ppNote :: InstrId -> CsdEvent Note -> Doc
 ppNote instrId evt = char 'i' 
     <+> ppInstrId instrId 
     <+> double (csdEventStart evt) <+> double (csdEventDur evt) 
-    <+> hcat (fmap ppPrim $ csdEventContent evt)
+    <+> hsep (fmap ppPrim $ csdEventContent evt)
 
 ppPrim :: Prim -> Doc
 ppPrim x = case x of
@@ -71,7 +71,6 @@ ppGen tabId ft = char 'f'
 
 ppInstr :: InstrId -> Doc -> Doc
 ppInstr instrId body = vcat [
-    line,
     text "instr" <+> ppInstrId instrId,
     body,
     text "endin"]
@@ -151,7 +150,7 @@ ppProc name xs = text name <+> (hsep $ punctuate comma xs)
 ppVar :: Var -> Doc
 ppVar v = case v of
     Var ty rate name -> ppVarType ty <> ppRate rate <> text (varPrefix ty : name)
-    VarVerbatim _ name -> text name
+    VarVerbatim name -> text name
 
 varPrefix :: VarType -> Char
 varPrefix x = case x of
@@ -234,3 +233,7 @@ ppRate x = case x of
     Sr -> char 'S'
     _  -> phi x
     where phi = text . map toLower . show 
+
+ppTotalDur :: Double -> Doc
+ppTotalDur d = text "f0" <+> double d
+

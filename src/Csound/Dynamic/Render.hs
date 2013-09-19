@@ -25,5 +25,6 @@ renderOrc a = vcatSep
 renderSco :: Sco -> Doc
 renderSco a = vcatSep 
     [ P.vcat $ fmap (uncurry ppGen)   $ scoGens a
+    , ppTotalDur $ maximum $ (0:) $ fmap (csdEventListDur . snd) $ scoNotes a    
     , P.vcat $ fmap (uncurry ppNotes) $ scoNotes a ]    
 

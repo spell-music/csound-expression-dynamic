@@ -27,7 +27,9 @@ module Csound.Dynamic.Build (
     writeVar, readVar, readOnlyVar, initVar, appendVarBy,
 
     -- * Instruments
-    intInstr
+    intInstr,
+    -- * Global init statements
+    setSr, setKsmps, setNchnls, setKr, setZeroDbfs
 ) where
 
 import Control.Monad.Trans.State.Strict
@@ -80,7 +82,7 @@ str = prim . PrimString
 
 -- | Converts Haskell's integers to Csound's doubles
 int :: Int -> E
-int = double . fromIntegral
+int = prim . PrimInt
 
 ----------------------------------------------------------------------
 -- constructing opcodes
@@ -195,4 +197,22 @@ execSE a = maybe emptyE id $ snd $ runSE a
 intInstr :: Int -> SE () -> Instr
 intInstr n expr = Instr (intInstrId n) expr
 
+----------------------------------------------------------------
+-- global inits
+
+setSr, setKsmps, setNchnls, setKr :: Int -> SE ()
+    
+setZeroDbfs :: Double -> SE ()
+
+setSr       = gInit "sr"
+setKr       = gInit "kr"
+setNchnls   = gInit "nchnls"
+setKsmps    = gInit "ksmps"
+setZeroDbfs = gInitDouble "0dbfs"
+
+gInit :: String -> Int -> SE ()
+gInit name val = writeVar (VarVerbatim name) (int val)
+
+gInitDouble :: String -> Double -> SE ()
+gInitDouble name val = writeVar (VarVerbatim name) (double val)
 

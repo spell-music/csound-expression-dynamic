@@ -8,7 +8,6 @@ import Data.List(sort, find)
 import qualified Data.Map as M
 
 import Data.Maybe(fromJust)
-import Data.Default
 import Data.Fix(Fix(..), cata)
 import Data.Fix.Cse(fromDag, cse)
 
@@ -65,7 +64,7 @@ rateGraph dag = (stmts, lastId)
      where (stmts, lastId) = deduceTypes algSpec dag
            algSpec = TypeGraph mkConvert' defineType'
 
-           mkConvert' a = (to, RatedExp def def $ 
+           mkConvert' a = (to, RatedExp Nothing Nothing $ 
                    ConvertRate (ratedVarRate to) (ratedVarRate from) $ PrimOr $ Right from)
                where from = convertFrom a
                      to   = convertTo   a
@@ -73,7 +72,7 @@ rateGraph dag = (stmts, lastId)
            defineType' (outVar, expr) desiredRates = (ratesForConversion, (outVar', expr'))
                where possibleRate = deduceRate desiredRates expr 
                      ratesForConversion = filter (not . flip coherentRates possibleRate) desiredRates
-                     expr' = RatedExp def def $ rateExp possibleRate $ ratedExpExp expr
+                     expr' = RatedExp Nothing Nothing $ rateExp possibleRate $ ratedExpExp expr
                      outVar' = ratedVar possibleRate outVar
 
 ----------------------------------------------------------
@@ -115,7 +114,7 @@ deduceRate desiredRates expr = case ratedExpExp expr of
     
     ExpNum _ -> case ratedExpRate expr of
         Just r  -> r
-        Nothing -> case maximum desiredRates of
+        Nothing -> case maximum (Ar : desiredRates) of
             Xr -> Ar
             r -> r
     

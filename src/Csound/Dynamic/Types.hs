@@ -136,8 +136,7 @@ data Var
         , varRate :: Rate
         , varName :: Name } 
     | VarVerbatim 
-        { varRate :: Rate
-        , varName :: Name        
+        { varName :: Name        
         } deriving (Show, Eq, Ord)       
         
 -- Variables can be global (then we have to prefix them with `g` in the rendering) or local.
