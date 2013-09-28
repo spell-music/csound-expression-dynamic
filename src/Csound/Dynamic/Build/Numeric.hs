@@ -2,7 +2,7 @@
 {-# Language TypeSynonymInstances, FlexibleInstances #-}
 -- | Numeric instances
 module Csound.Dynamic.Build.Numeric(
-    ceilE, floorE, roundE, fracE        
+    ceilE, floorE, roundE, intE, fracE        
 ) where
 
 import Data.Monoid

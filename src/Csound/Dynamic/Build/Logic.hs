@@ -10,18 +10,18 @@ import qualified Data.IntMap as IM(fromList)
 
 import Data.Boolean
 import Csound.Dynamic.Types
-import Csound.Dynamic.Build(noRate, se_, stmtOnly, onExp, toExp)
+import Csound.Dynamic.Build(noRate, dep_, stmtOnly, onExp, toExp)
 
 ------------------------------------------------------
 -- imperative if-then-else
 
-when :: E -> SE () -> SE ()
+when :: E -> Dep () -> Dep ()
 when p body = do
     ifBegin p
     body
     ifEnd
 
-whens :: [(E, SE ())] -> SE () -> SE ()
+whens :: [(E, Dep ())] -> Dep () -> Dep ()
 whens bodies el = case bodies of
     []   -> el
     a:as -> do
@@ -33,20 +33,20 @@ whens bodies el = case bodies of
         ifEnd
     where elseIfs = mapM_ (\(p, body) -> elseIfBegin p >> body)
 
-ifBegin :: E -> SE ()
+ifBegin :: E -> Dep ()
 ifBegin = withCond IfBegin
 
-elseIfBegin :: E -> SE ()
+elseIfBegin :: E -> Dep ()
 elseIfBegin = withCond ElseIfBegin
 
-elseBegin :: SE ()
+elseBegin :: Dep ()
 elseBegin = stmtOnly ElseBegin
 
-ifEnd :: SE ()
+ifEnd :: Dep ()
 ifEnd = stmtOnly IfEnd
 
-withCond :: (CondInfo (PrimOr E) -> MainExp (PrimOr E)) -> E -> SE ()
-withCond stmt p = se_ $ noRate $ stmt (condInfo p)
+withCond :: (CondInfo (PrimOr E) -> MainExp (PrimOr E)) -> E -> Dep ()
+withCond stmt p = dep_ $ noRate $ stmt (condInfo p)
 
 instance Boolean E where
     true = boolOp0 TrueOp

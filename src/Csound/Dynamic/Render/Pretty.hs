@@ -42,8 +42,8 @@ tag name content = vcatSep [
     content, 
     text "</" <> text name <> char '>']  
 
-ppNotes :: InstrId -> CsdEventList Note -> Doc
-ppNotes instrId = vcat . fmap (ppNote instrId) . csdEventListNotes
+ppNotes :: InstrId -> [CsdEvent Note] -> Doc
+ppNotes instrId = vcat . fmap (ppNote instrId)
 
 ppNote :: InstrId -> CsdEvent Note -> Doc
 ppNote instrId evt = char 'i' 
@@ -104,6 +104,7 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     ElseBegin                       -> left >> (succTab $ text "else")
     IfEnd                           -> left >> (tab     $ text "endif")
     EmptyExp                        -> return empty
+    Verbatim str                    -> return $ text str
     x -> error $ "unknown expression: " ++ show x
     where tab doc = fmap (shiftByTab doc) get 
           tabWidth = 4

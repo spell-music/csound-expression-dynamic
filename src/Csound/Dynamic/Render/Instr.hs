@@ -17,7 +17,7 @@ import Csound.Dynamic.Tfm.DeduceTypes
 import Csound.Dynamic.Tfm.UnfoldMultiOuts
 
 import Csound.Dynamic.Types hiding (Var)
-import Csound.Dynamic.Build(execSE, getRates, isMultiOutSignature)
+import Csound.Dynamic.Build(execDep, getRates, isMultiOutSignature)
 import Csound.Dynamic.Render.Pretty
 
 type Dag f = [(Int, f Int)]
@@ -25,9 +25,9 @@ type Dag f = [(Int, f Int)]
 renderInstr :: Instr -> Doc
 renderInstr a = ppInstr (instrName a) $ renderInstrBody (instrBody a)
 
-renderInstrBody :: SE () -> Doc
+renderInstrBody :: Dep () -> Doc
 renderInstrBody a = P.vcat $ flip evalState 0 $ 
-    mapM (uncurry ppStmt . clearEmptyResults) $ collectRates $ toDag (execSE a)
+    mapM (uncurry ppStmt . clearEmptyResults) $ collectRates $ toDag (execDep a)
 
 -------------------------------------------------------------
 -- E -> Dag
@@ -145,6 +145,7 @@ rateExp curRate expr = case expr of
     ElseBegin -> ElseBegin
     IfEnd -> IfEnd
     EmptyExp -> EmptyExp    
+    Verbatim a -> Verbatim a
     where ratesFromSignature rate signature = case signature of
               SingleRate table -> table M.! rate
               MultiRate _ rs   -> rs

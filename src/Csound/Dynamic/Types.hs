@@ -10,7 +10,7 @@ module Csound.Dynamic.Types(
     BoolExp, CondInfo, CondOp(..), isTrue, isFalse,    
     NumExp, NumOp(..), Note,    
     -- Dependency tracking
-    SE(..), runSE, 
+    Dep(..), runDep, 
     -- Csd-file
     Csd(..), Flags, Orc(..), Sco(..), Instr(..),
     module Csound.Dynamic.EventList
@@ -123,6 +123,8 @@ data MainExp a
     | ElseIfBegin (CondInfo a)
     | ElseBegin
     | IfEnd
+    -- | Verbatim stmt
+    | Verbatim String
     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)  
 
 isEmptyExp :: E -> Bool
@@ -281,26 +283,26 @@ instance Traversable PrimOr where
 ------------------------------------------------------------------------------------------
 -- | Dependency tracking
 
--- | Csound's synonym for 'IO'-monad. 'SE' means Side Effect. 
--- You will bump into 'SE' trying to read and write to delay lines,
+-- | Csound's synonym for 'IO'-monad. 'Dep' means Side Effect. 
+-- You will bump into 'Dep' trying to read and write to delay lines,
 -- making random signals or trying to save your audio to file. 
--- Instrument is expected to return a value of @SE [Sig]@. 
+-- Instrument is expected to return a value of @Dep [Sig]@. 
 -- So it's okay to do some side effects when playing a note.
-newtype SE a = SE { unSE :: State (Maybe E) a }
+newtype Dep a = Dep { unDep :: State (Maybe E) a }
 
-instance Functor SE where
-    fmap f = SE . fmap f . unSE
+instance Functor Dep where
+    fmap f = Dep . fmap f . unDep
 
-instance Applicative SE where
+instance Applicative Dep where
     pure = return
     (<*>) = ap
 
-instance Monad SE where
-    return = SE . return
-    ma >>= mf = SE $ unSE ma >>= unSE . mf
+instance Monad Dep where
+    return = Dep . return
+    ma >>= mf = Dep $ unDep ma >>= unDep . mf
 
-runSE :: SE a -> (a, Maybe E)
-runSE a = runState (unSE a) Nothing
+runDep :: Dep a -> (a, Maybe E)
+runDep a = runState (unDep a) Nothing
 
 --------------------------------------------------------------
 -- csound file
@@ -314,19 +316,19 @@ data Csd = Csd
 type Flags = String
 
 data Orc = Orc
-    { orcHead           :: SE ()
+    { orcHead           :: Dep ()
     , orcInstruments    :: [Instr]
     }
 
 data Instr = Instr
     { instrName :: InstrId
-    , instrBody :: SE ()
+    , instrBody :: Dep ()
     }
 
 data Sco = Sco 
-    { scoGens   :: [(Int, Gen)]
-    , scoNotes  :: [(InstrId, CsdEventList Note)]
-    }
+    { scoTotalDur   :: Maybe Double
+    , scoGens       :: [(Int, Gen)]
+    , scoNotes      :: [(InstrId, [CsdEvent Note])]  }
 
 --------------------------------------------------------------
 -- comments
