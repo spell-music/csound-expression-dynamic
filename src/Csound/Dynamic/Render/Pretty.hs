@@ -150,8 +150,8 @@ ppProc name xs = text name <+> (hsep $ punctuate comma xs)
 
 ppVar :: Var -> Doc
 ppVar v = case v of
-    Var ty rate name -> ppVarType ty <> ppRate rate <> text (varPrefix ty : name)
-    VarVerbatim name -> text name
+    Var ty rate name   -> ppVarType ty <> ppRate rate <> text (varPrefix ty : name)
+    VarVerbatim _ name -> text name
 
 varPrefix :: VarType -> Char
 varPrefix x = case x of

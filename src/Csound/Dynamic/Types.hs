@@ -29,6 +29,7 @@ import Data.Fix
 
 import qualified Csound.Dynamic.Tfm.DeduceTypes as R(Var(..)) 
 import Csound.Dynamic.EventList
+import Csound.Dynamic.Flags
 
 type Name = String
 
@@ -138,7 +139,8 @@ data Var
         , varRate :: Rate
         , varName :: Name } 
     | VarVerbatim 
-        { varName :: Name        
+        { varRate :: Rate
+        , varName :: Name        
         } deriving (Show, Eq, Ord)       
         
 -- Variables can be global (then we have to prefix them with `g` in the rendering) or local.
@@ -175,6 +177,8 @@ data Rate   -- rate:
     | Ir    -- init (constants)    
     | Sr    -- strings
     | Fr    -- spectrum (for pvs opcodes)
+    | Wr    -- special spectrum 
+    | Tvar  -- I don't understand what it is (fix me) used with Fr
     deriving (Show, Eq, Ord, Enum, Bounded)
     
 -- Opcode type signature. Opcodes can produce single output (SingleRate) or multiple outputs (MultiRate).
@@ -312,8 +316,6 @@ data Csd = Csd
     , csdOrc    :: Orc
     , csdSco    :: Sco
     } 
-
-type Flags = String
 
 data Orc = Orc
     { orcHead           :: Dep ()

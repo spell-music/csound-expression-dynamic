@@ -15,7 +15,7 @@ renderCsd a = show $ ppCsdFile
     (renderSco   $ csdSco a)
 
 renderFlags :: Flags -> Doc
-renderFlags = P.text
+renderFlags = P.pretty
 
 renderOrc :: Orc -> Doc
 renderOrc a = vcatSep

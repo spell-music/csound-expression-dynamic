@@ -18,10 +18,10 @@ module Csound.Dynamic.Build (
 
     -- ** Opcodes constructors
     Spec1, spec1, opcs, 
-    Specs, specs, mopcs, mo,
+    Specs, specs, MultiOut, mopcs, mo, 
 
     -- * Dependencies
-    dep, dep_, stripDep, stmtOnly, execDep,
+    dep, dep_, mdep, stripDep, stmtOnly, execDep,
 
     -- * Variables
     writeVar, readVar, readOnlyVar, initVar, appendVarBy,
@@ -113,8 +113,11 @@ type Specs = ([Rate], [Rate])
 specs :: Specs -> Signature
 specs = uncurry MultiRate 
 
-mopcs :: Int -> Name -> Specs -> [E] -> [E]
-mopcs numOfOuts name signature as = mo numOfOuts $ tfm (pref name $ specs signature) as
+-- | Multiple output. Specify the number of outputs to get the result.
+type MultiOut a = Int -> a
+
+mopcs :: Name -> Specs -> [E] -> MultiOut [E]
+mopcs name signature as = \numOfOuts -> mo numOfOuts $ tfm (pref name $ specs signature) as
 
 mo :: Int -> E -> [E]
 mo n e = zipWith (\cellId r -> select cellId r e') [0 ..] outRates
@@ -194,6 +197,9 @@ dep a = Dep $ state $ \s ->
 dep_ :: E -> Dep ()
 dep_ = fmap (const ()) . dep
 
+mdep :: MultiOut [E] -> MultiOut (Dep [E])
+mdep a = mapM dep . a
+
 stripDep :: Dep a -> a
 stripDep (Dep a) = evalState a Nothing
 
@@ -229,8 +235,8 @@ setKsmps    = gInit "ksmps"
 setZeroDbfs = gInitDouble "0dbfs"
 
 gInit :: String -> Int -> Dep ()
-gInit name val = writeVar (VarVerbatim name) (int val)
+gInit name val = writeVar (VarVerbatim Ir name) (int val)
 
 gInitDouble :: String -> Double -> Dep ()
-gInitDouble name val = writeVar (VarVerbatim name) (double val)
+gInitDouble name val = writeVar (VarVerbatim Ir name) (double val)
 
