@@ -1,5 +1,29 @@
-module Csound.Dynamic.Flags where
+-- | Csound's command line flags. See original documentation for detailed overview: <http://www.csounds.com/manual/html/CommandFlagsCategory.html>
+module Csound.Dynamic.Flags(
+    Flags(..),
 
+    -- * Audio file output
+    AudioFileOutput(..),
+    FormatHeader(..), FormatSamples(..), FormatType(..),
+    Dither(..), IdTags(..),
+
+    -- * Realtime Audio Input/Output
+    Rtaudio(..), PulseAudio(..),
+       
+    -- * MIDI File Input/Ouput
+    MidiIO(..),
+
+    -- * MIDI Realtime Input/Ouput
+    MidiRT, Rtmidi(..),
+
+    -- * Display
+    Displays(..), DisplayMode(..),
+
+    -- * Performance Configuration and Control
+    Config(..)
+) where
+
+import Data.Char
 import Data.Default
 import Text.PrettyPrint.Leijen
 
@@ -37,14 +61,17 @@ data FormatHeader = NoHeader | RewriteHeader
 data FormatSamples 
     = Bit24 | Alaw | Uchar | Schar 
     | FloatSamples | Ulaw | Short | Long
+    deriving (Show)
 
 data Dither = Triangular | Uniform
+    deriving (Show)
 
 data FormatType 
     = Aiff | Au | Avr | Caf | Flac | Htk
     | Ircam | Mat4 | Mat5 | Nis | Paf | Pvf
     | Raw | Sd2 | Sds | Svx | Voc | W64 
     | Wav | Wavex | Xi
+    deriving (Show)
 
 -- Output file id tags
 
@@ -159,16 +186,31 @@ instance Default Config where
 p :: Pretty b => (a -> b) -> (a -> Doc)
 p = (pretty . )
 
-b :: String -> (a -> Bool) -> (a -> Doc)
-b property extract a
+bo :: String -> (a -> Bool) -> (a -> Doc)
+bo property extract a
     | extract a = text property
     | otherwise = empty    
 
-fields :: a -> [a -> Doc] -> Doc
-fields a fs = hsep $ fmap ( $ a) fs
+mp :: (String -> String) -> (a -> Maybe String) -> (a -> Doc)
+mp f a = p (fmap f . a)
+
+mi :: (String -> String) -> (a -> Maybe Int) -> (a -> Doc)
+mi f a = mp f (fmap show . a)
+
+p1 :: String -> String -> String
+p1 pref x = ('-' : pref) ++ (' ' : x)
+
+p2 :: String -> String -> String
+p2 pref x = ('-' : '-' : pref) ++ ('=' : x)
+   
+p3 :: String -> String -> String
+p3 pref x = ('-' : '+' : pref) ++ ('=' : x)
+
+fields :: [a -> Doc] -> a -> Doc
+fields fs a = hsep $ fmap ( $ a) fs
 
 instance Pretty Flags where
-    pretty a = fields a 
+    pretty = fields
         [ p audioFileOutput 
         , p idTags 
         , p rtaudio
@@ -180,18 +222,137 @@ instance Pretty Flags where
         , p config
         , p flagsVerbatim ]
 
+instance Pretty AudioFileOutput where
+    pretty = fields 
+        [ pSamplesAndType . (\x -> (formatSamples x, formatType x))
+        , mp (p2 "output") output
+        , mp (p2 "input")  input
+        , bo "--nosound" nosound
+        , bo "--nopeaks" nopeaks ]
 
+pSamplesAndType :: (Maybe FormatSamples, Maybe FormatType) -> Doc
+pSamplesAndType (ma, mb) = pretty $ case (ma, mb) of
+    (Nothing, Nothing)  -> ""
+    (Just a, Nothing)   -> p2 "format" $ samplesToStr a
+    (Nothing, Just b)   -> p2 "format" $ typeToStr b
+    (Just a, Just b)    -> p2 "format" $ samplesAndTypeToStr a b
+    where
+        samplesToStr x = case x of
+            Bit24   -> "24bit"
+            FloatSamples -> "float"
+            _   -> firstToLower $ show x
 
+        typeToStr = firstToLower . show
 
-data Flags = Flags
-    { audioFileOutput   :: AudioFileOutput
-    , idTags            :: IdTags
-    , rtaudio           :: Maybe Rtaudio
-    , pulseAudio        :: Maybe PulseAudio
-    , midiIO            :: MidiIO
-    , midiRT            :: MidiRT
-    , rtmidi            :: Maybe Rtmidi
-    , displays          :: Displays
-    , config            :: Config 
-    , flagsVerbatim     :: Maybe String }
+        samplesAndTypeToStr a b = samplesToStr a ++ ":" ++ typeToStr b
+
+instance Pretty Dither where
+    pretty = pretty . p2 "dither" . show
+
+instance Pretty IdTags where
+    pretty = fields 
+        [ mp (p3 "id_artist")       idArtist
+        , mp (p3 "id_comment")      idComment
+        , mp (p3 "id_copyright")    idCopyright
+        , mp (p3 "id_date")         idDate
+        , mp (p3 "id_software")     idSoftware
+        , mp (p3 "id_title")        idTitle ]
+
+instance Pretty Rtaudio where
+    pretty x = case x of
+        PortAudio   -> rt "PortAudio"
+        Jack name ins outs -> rt "jack" <+> jackFields name ins outs
+        Mme -> rt "mme"
+        Alsa  -> rt "alsa"
+        CoreAudio -> rt "CoreAudio"
+        NoRtaudio   -> rt "0"
+        where 
+            rt = text . p3 "rtaudio"
+            jackFields name ins outs = hsep 
+                [ text $ p3 "jack_client" name
+                , text $ p3 "jack_inportname" ins
+                , text $ p3 "jack_outportname" outs ]
+
+instance Pretty PulseAudio where
+    pretty a = hsep $ fmap text $
+        [ p3 "server" $ paServer a
+        , p3 "output_stream" $ paOutput a
+        , p3 "input_stream" $ paInput a ]
+
+instance Pretty MidiIO where
+    pretty = fields 
+        [ mp (p2 "midifile") midiFile
+        , mp (p2 "midioutfile") midiOutFile
+        , bo "-+raw_controller_mode" rawControllerMode
+        , mp (p3 "skip_seconds") (fmap show . midiSkipSeconds)
+        , bo "--terminate-on-midi" terminateOnMidi ]
+
+instance Pretty MidiRT where
+    pretty = fields
+        [ mp (p2 "midi-device")         midiDevice
+        , mi (p2 "midi-key")            midiKey
+        , mi (p2 "midi-key-cps")        midiKeyCps
+        , mi (p2 "midi-key-oct")        midiKeyOct
+        , mi (p2 "midi-key-pch")        midiKeyPch
+        , mi (p2 "midi-velocity")       midiVelocity
+        , mi (p2 "midi-velocity-amp")   midiVelocityAmp
+        , mp (p1 "Q")                   midiOutDevice ]
+    
+instance Pretty Rtmidi where
+    pretty x = text $ p3 "rtmidi" $ case x of
+        PortMidi    -> "PortMidi"
+        AlsaMidi    -> "alsa"
+        MmeMidi     -> "mme"
+        WinmmMidi   -> "winmm"
+        NoRtmidi    -> "0"
+
+instance Pretty Displays where
+    pretty = fields
+        [ mi (p2 "csd-line-nums")   csdLineNums 
+        , p                         displayMode
+        , mi (p2 "heartbeat")       displayHeartbeat
+        , mi (p2 "messagelevel")    messageLevel
+        , mi (p2 "m-amps")          mAmps
+        , mi (p2 "m-range")         mRange
+        , mi (p2 "m-warnings")      mWarnings
+        , mi (p2 "m-dB")            mDb
+        , mi (p2 "m-colours")       mColours
+        , mi (p2 "m-benchmarks")    mBenchmarks
+        , bo "-+msg_color"          msgColor
+        , bo "--verbose"            displayVerbose
+        , mi (p2 "list-opcodes")    listOpcodes ]
+
+instance Pretty DisplayMode where
+    pretty x = text $ case x of
+        NoDisplay           -> "--nodisplays"
+        PostScriptDisplay   -> "--postscriptdisplay"
+        AsciiDisplay        -> "--asciidisplay"
+        
+instance Pretty Config where
+    pretty = fields 
+        [ mi (p2 "hardwarebufsamps")    hwBuf
+        , mi (p2 "iobufsamps")          ioBuf
+        , mi (p2 "control-rate")        newKr
+        , mi (p2 "sample-rate")         newSr
+        , mp (p2 "score-in")            scoreIn
+        , macro "omacro"                omacro
+        , macro "smacro"                smacro
+        , bo "--sched"                  setSched
+        , mi (p2 "sched")               schedNum
+        , strset                        strsetN
+        , mp (p3 "skip_seconds")        (fmap show . skipSeconds)
+        , mi (p2 "tempo")               setTempo ]
+        where
+            macro name f = pretty . fmap phi . f
+                where phi (a, b) = "--" ++ name ++ a ++ "=" ++ b
+            strset f = pretty . fmap phi . f
+                where phi (n, a) = "--strset" ++ (show n) ++ "=" ++ a
+
+---------------------------------------------------
+-- utilities
+
+firstToLower :: String -> String
+firstToLower x = case x of 
+    a:as -> toLower a : as
+    []   -> []
 
