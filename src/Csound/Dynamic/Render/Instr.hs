@@ -146,6 +146,9 @@ rateExp curRate expr = case expr of
     IfEnd -> IfEnd
     EmptyExp -> EmptyExp    
     Verbatim a -> Verbatim a
+
+    ExpBool _           -> error $ msg "ExpBool expression should be substituted"
+    ConvertRate _ _ _   -> error $ msg "ConvertRate couldn't be here. It's introduced on the later stages of processing" 
     where ratesFromSignature rate signature = case signature of
               SingleRate table -> table M.! rate
               MultiRate _ rs   -> rs
@@ -155,6 +158,8 @@ rateExp curRate expr = case expr of
           
           rec2 r = fmap (fmap (ratedVar r))  
           rec1 r = fmap (ratedVar r)
+
+          msg txt = "Csound.Dynamic.Render.Instr.rateExp: " ++ txt 
 
           
 
