@@ -14,7 +14,7 @@ module Csound.Dynamic.Flags(
     MidiIO(..),
 
     -- * MIDI Realtime Input/Ouput
-    MidiRT, Rtmidi(..),
+    MidiRT(..), Rtmidi(..),
 
     -- * Display
     Displays(..), DisplayMode(..),
