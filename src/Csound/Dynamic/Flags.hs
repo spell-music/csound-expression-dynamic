@@ -25,6 +25,7 @@ module Csound.Dynamic.Flags(
 
 import Data.Char
 import Data.Default
+import Data.Maybe
 import Text.PrettyPrint.Leijen
 
 data Flags = Flags
@@ -107,12 +108,12 @@ data PulseAudio = PulseAudio
 data MidiIO = MidiIO 
     { midiFile          :: Maybe String
     , midiOutFile       :: Maybe String
+    , muteTracks        :: Maybe String
     , rawControllerMode :: Bool
-    , midiSkipSeconds   :: Maybe Double
     , terminateOnMidi   :: Bool }
 
 instance Default MidiIO where
-    def = MidiIO def def False def False
+    def = MidiIO def def def False False
 
 -- MIDI Realtime Input/Ouput
 
@@ -183,18 +184,25 @@ instance Default Config where
 -- rendering
 
 -- just an alias for 'pretty'
-p :: Pretty b => (a -> b) -> (a -> Doc)
-p = (pretty . )
+p :: Pretty b => (a -> Maybe b) -> (a -> Maybe Doc)
+p = (fmap pretty . )
 
-bo :: String -> (a -> Bool) -> (a -> Doc)
+pe :: Pretty b => (a -> b) -> (a -> Maybe Doc)
+pe f = phi . f 
+    where phi x  
+            | null (show res)   = Nothing
+            | otherwise         = Just res
+            where res = pretty x
+
+bo :: String -> (a -> Bool) -> (a -> Maybe Doc)
 bo property extract a
-    | extract a = text property
-    | otherwise = empty    
+    | extract a = Just $ text property
+    | otherwise = Nothing    
 
-mp :: (String -> String) -> (a -> Maybe String) -> (a -> Doc)
+mp :: (String -> String) -> (a -> Maybe String) -> (a -> Maybe Doc)
 mp f a = p (fmap f . a)
 
-mi :: (String -> String) -> (a -> Maybe Int) -> (a -> Doc)
+mi :: (String -> String) -> (a -> Maybe Int) -> (a -> Maybe Doc)
 mi f a = mp f (fmap show . a)
 
 p1 :: String -> String -> String
@@ -206,21 +214,21 @@ p2 pref x = ('-' : '-' : pref) ++ ('=' : x)
 p3 :: String -> String -> String
 p3 pref x = ('-' : '+' : pref) ++ ('=' : x)
 
-fields :: [a -> Doc] -> a -> Doc
-fields fs a = hsep $ fmap ( $ a) fs
+fields :: [a -> Maybe Doc] -> a -> Doc
+fields fs a = hsep $ catMaybes $ fmap ( $ a) fs
 
 instance Pretty Flags where
     pretty = fields
-        [ p audioFileOutput 
-        , p idTags 
-        , p rtaudio
-        , p pulseAudio
-        , p midiIO
-        , p midiRT
-        , p rtmidi
-        , p displays
-        , p config
-        , p flagsVerbatim ]
+        [ pe audioFileOutput 
+        , pe idTags 
+        , p  rtaudio
+        , p  pulseAudio
+        , pe midiIO
+        , pe midiRT
+        , p  rtmidi
+        , pe displays
+        , pe config
+        , p  flagsVerbatim ]
 
 instance Pretty AudioFileOutput where
     pretty = fields 
@@ -228,14 +236,15 @@ instance Pretty AudioFileOutput where
         , mp (p2 "output") output
         , mp (p2 "input")  input
         , bo "--nosound" nosound
-        , bo "--nopeaks" nopeaks ]
+        , bo "--nopeaks" nopeaks
+        , mp (p2 "d/Mither") $ fmap (firstToLower . show) . dither ]
 
-pSamplesAndType :: (Maybe FormatSamples, Maybe FormatType) -> Doc
-pSamplesAndType (ma, mb) = pretty $ case (ma, mb) of
-    (Nothing, Nothing)  -> ""
-    (Just a, Nothing)   -> p2 "format" $ samplesToStr a
-    (Nothing, Just b)   -> p2 "format" $ typeToStr b
-    (Just a, Just b)    -> p2 "format" $ samplesAndTypeToStr a b
+pSamplesAndType :: (Maybe FormatSamples, Maybe FormatType) -> Maybe Doc
+pSamplesAndType (ma, mb) = fmap pretty $ case (ma, mb) of
+    (Nothing, Nothing)  -> Nothing
+    (Just a, Nothing)   -> Just $ p2 "format" $ samplesToStr a
+    (Nothing, Just b)   -> Just $ p2 "format" $ typeToStr b
+    (Just a, Just b)    -> Just $ p2 "format" $ samplesAndTypeToStr a b
     where
         samplesToStr x = case x of
             Bit24   -> "24bit"
@@ -251,12 +260,17 @@ instance Pretty Dither where
 
 instance Pretty IdTags where
     pretty = fields 
-        [ mp (p3 "id_artist")       idArtist
-        , mp (p3 "id_comment")      idComment
-        , mp (p3 "id_copyright")    idCopyright
-        , mp (p3 "id_date")         idDate
-        , mp (p3 "id_software")     idSoftware
-        , mp (p3 "id_title")        idTitle ]
+        [ mp (p3' "id_artist")       idArtist
+        , mp (p3' "id_comment")      idComment
+        , mp (p3' "id_copyright")    idCopyright
+        , mp (p3' "id_date")         idDate
+        , mp (p3' "id_software")     idSoftware
+        , mp (p3' "id_title")        idTitle ]
+        where 
+            p3' a b = fmap substSpaces $ p3 a b
+            substSpaces x
+                | isSpace x = '_'
+                | otherwise = x  
 
 instance Pretty Rtaudio where
     pretty x = case x of
@@ -283,8 +297,8 @@ instance Pretty MidiIO where
     pretty = fields 
         [ mp (p2 "midifile") midiFile
         , mp (p2 "midioutfile") midiOutFile
+        , mp (p3 "mute_tracks") muteTracks
         , bo "-+raw_controller_mode" rawControllerMode
-        , mp (p3 "skip_seconds") (fmap show . midiSkipSeconds)
         , bo "--terminate-on-midi" terminateOnMidi ]
 
 instance Pretty MidiRT where
@@ -343,9 +357,9 @@ instance Pretty Config where
         , mp (p3 "skip_seconds")        (fmap show . skipSeconds)
         , mi (p2 "tempo")               setTempo ]
         where
-            macro name f = pretty . fmap phi . f
-                where phi (a, b) = "--" ++ name ++ a ++ "=" ++ b
-            strset f = pretty . fmap phi . f
+            macro name f = fmap (pretty . phi) . f
+                where phi (a, b) = "--" ++ name ++ ":" ++ a ++ "=" ++ b
+            strset f = fmap (pretty . phi) . f
                 where phi (n, a) = "--strset" ++ (show n) ++ "=" ++ a
 
 ---------------------------------------------------

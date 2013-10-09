@@ -2,6 +2,7 @@
 module Csound.Dynamic (
     module Csound.Dynamic.Types,
     module Csound.Dynamic.EventList,
+    module Csound.Dynamic.Flags,
 
     module Csound.Dynamic.Build,
     module Csound.Dynamic.Build.Numeric,
@@ -12,6 +13,7 @@ module Csound.Dynamic (
 
 import Csound.Dynamic.Types
 import Csound.Dynamic.EventList
+import Csound.Dynamic.Flags
 
 import Csound.Dynamic.Build
 import Csound.Dynamic.Build.Numeric
