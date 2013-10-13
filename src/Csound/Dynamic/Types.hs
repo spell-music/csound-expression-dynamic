@@ -4,7 +4,7 @@ module Csound.Dynamic.Types(
     E, RatedExp(..), isEmptyExp, RatedVar, ratedVar, ratedVarRate, ratedVarId, Exp, toPrimOr, PrimOr(..), MainExp(..), Name, 
     InstrId(..), intInstrId, ratioInstrId, stringInstrId,
     VarType(..), Var(..), Info(..), OpcFixity(..), Rate(..), 
-    Signature(..), isProcedure, isInfix, isPrefix,    
+    Signature(..), isInfix, isPrefix,    
     Prim(..), Gen(..),  
     Inline(..), InlineExp(..), PreInline(..),
     BoolExp, CondInfo, CondOp(..), isTrue, isFalse,    
@@ -155,17 +155,15 @@ data Info = Info
     , infoSignature     :: Signature
     -- Opcode can be infix or prefix
     , infoOpcFixity     :: OpcFixity
-    , infoNextSE        :: Maybe Int
     } deriving (Show, Eq, Ord)           
   
-isPrefix, isInfix, isProcedure :: Info -> Bool
+isPrefix, isInfix :: Info -> Bool
 
 isPrefix = (Prefix ==) . infoOpcFixity
 isInfix  = (Infix  ==) . infoOpcFixity
-isProcedure = (Procedure ==) . infoOpcFixity
  
 -- Opcode fixity
-data OpcFixity = Prefix | Infix | Procedure
+data OpcFixity = Prefix | Infix | Opcode
     deriving (Show, Eq, Ord)
 
 -- | The Csound rates.
@@ -264,14 +262,7 @@ getCondInfoOp x = case inlineExp x of
 
 type NumExp a = PreInline NumOp a
 
-data NumOp 
-    = Add | Sub | Neg | Mul | Div
-    | Pow | Mod 
-    | Sin | Cos | Sinh | Cosh | Tan | Tanh | Sininv | Cosinv | Taninv
-    | Ceil | Floor | Frac | Round | IntOp
-    | Abs | ExpOp | Log | Log10 | Logbtwo | Sqrt    
-    | Ampdb | Ampdbfs | Dbamp | Dbfsamp 
-    | Cent | Cpsmidinn | Cpsoct | Cpspch | Octave | Octcps | Octmidinn | Octpch | Pchmidinn | Pchoct | Semitone
+data NumOp = Add | Sub | Neg | Mul | Div | Pow | Mod 
     deriving (Show, Eq, Ord)
 
 -------------------------------------------------------

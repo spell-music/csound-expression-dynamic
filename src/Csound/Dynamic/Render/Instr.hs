@@ -102,7 +102,6 @@ deduceRate desiredRates expr = case ratedExpExp expr of
         [Sr] -> Sr
         _ -> Ir
        
-    Tfm info _ | isProcedure info -> Xr
     Tfm info _ -> case infoSignature info of
         MultiRate _ _ -> Xr
         SingleRate tab -> 

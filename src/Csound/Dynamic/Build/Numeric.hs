@@ -8,7 +8,7 @@ module Csound.Dynamic.Build.Numeric(
 import Data.Monoid
 
 import Csound.Dynamic.Types
-import Csound.Dynamic.Build(toExp, prim, noRate)
+import Csound.Dynamic.Build(toExp, prim, noRate, opr1, numExp1)
 
 ---------------------------------------------
 -- monoid
@@ -35,10 +35,10 @@ instance Num E where
         | isZero b = a
         | otherwise = biOpt (-) Sub a b    
     
-    negate = unOpt negate Neg
+    negate = unOpt negate (numExp1 Neg)
     
     fromInteger = fromDouble . fromInteger
-    abs = unOpt abs Abs
+    abs = unOpt abs (opr1 "abs")
     signum = undefined
 
 instance Fractional E where
@@ -51,23 +51,23 @@ instance Fractional E where
 
 instance Floating E where
     pi = fromDouble pi
-    exp = unOpt exp ExpOp
-    sqrt = unOpt sqrt Sqrt
-    log = unOpt log Log
+    exp = unOpt exp (opr1 "exp")
+    sqrt = unOpt sqrt (opr1 "sqrt")
+    log = unOpt log (opr1 "log")
     logBase a n = case n of
-        2 -> unOpt (flip logBase 2) Logbtwo a
-        10 -> unOpt (flip logBase 10) Log10 a
+        2 -> unOpt (flip logBase 2) (opr1 "logbtwo") a
+        10 -> unOpt (flip logBase 10) (opr1 "log10") a
         b -> log a / log b
     (**) = biOpt (**) Pow
-    sin = unOpt sin Sin 
-    tan = unOpt tan Tan
-    cos = unOpt cos Cos
-    asin = unOpt asin Sininv
-    atan = unOpt atan Taninv
-    acos = unOpt acos Cosinv
-    sinh = unOpt sinh Sinh
-    tanh = unOpt tanh Tanh
-    cosh = unOpt cosh Cosh
+    sin = unOpt sin (opr1 "sin")
+    tan = unOpt tan (opr1 "tan")
+    cos = unOpt cos (opr1 "cos")
+    asin = unOpt asin (opr1 "sininv")
+    atan = unOpt atan (opr1 "taninv")
+    acos = unOpt acos (opr1 "cosinv")
+    sinh = unOpt sinh (opr1 "sinh")
+    tanh = unOpt tanh (opr1 "tanh")
+    cosh = unOpt cosh (opr1 "cosh")
     asinh a = log $ a + sqrt (a * a + 1)
     acosh a = log $ a + sqrt (a + 1) * sqrt (a - 1)
     atanh a = 0.5 * log ((1 + a) / (1 - a))
@@ -129,9 +129,8 @@ isZero :: E -> Bool
 isZero a = either ( == 0) (const False) $ toNumOpt a
 
 -- optimization for unary functions
-unOpt :: (Double -> Double) -> NumOp -> E -> E
-unOpt doubleOp op a = fromNumOpt $ either (Left . doubleOp) (Right . noOpt1) $ toNumOpt a
-    where noOpt1 x = expNum $ PreInline op [x] 
+unOpt :: (Double -> Double) -> (E -> E) -> E -> E
+unOpt doubleOp op a = fromNumOpt $ either (Left . doubleOp) (Right . op) $ toNumOpt a
 
 -- optimization for binary functions
 biOpt :: (Double -> Double -> Double) -> NumOp -> E -> E -> E
@@ -140,7 +139,7 @@ biOpt doubleOp op a b = fromNumOpt $ case (toNumOpt a, toNumOpt b) of
     _ -> Right $ noOpt2 a b
     where noOpt2 x y = expNum $ PreInline op [x, y]
 
-doubleToInt :: (Double -> Int) -> NumOp -> E -> E
+doubleToInt :: (Double -> Int) -> (E -> E) -> E -> E
 doubleToInt fun = unOpt (fromIntegral . fun) 
 
 -- arithmetic
@@ -152,9 +151,9 @@ mod' = biOpt (\a b -> fromIntegral $ mod (floor a :: Int) (floor b)) Mod
 
 ceilE, floorE, fracE, intE, roundE :: E -> E
 
-ceilE   = doubleToInt ceiling Ceil 
-floorE  = doubleToInt floor Floor
-roundE  = doubleToInt round Round
-fracE   = unOpt (snd . (properFraction :: (Double -> (Int, Double)))) Frac 
-intE    = doubleToInt truncate IntOp 
+ceilE   = doubleToInt ceiling (opr1 "ceil")
+floorE  = doubleToInt floor (opr1 "floor")
+roundE  = doubleToInt round (opr1 "round")
+fracE   = unOpt (snd . (properFraction :: (Double -> (Int, Double)))) (opr1 "frac") 
+intE    = doubleToInt truncate (opr1 "int")
 

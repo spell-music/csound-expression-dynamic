@@ -14,11 +14,10 @@ import Csound.Dynamic.Types
 vcatSep :: [Doc] -> Doc
 vcatSep = vcat . punctuate line
 
-binaries, unaries, funcs :: String -> [Doc] -> Doc
+binaries, unaries :: String -> [Doc] -> Doc
 
 binaries op as = binary op (as !! 0) (as !! 1)
 unaries  op as = unary  op (as !! 0)
-funcs    op as = func   op (as !! 0)
 
 binary :: String -> Doc -> Doc -> Doc
 binary op a b = parens $ a <+> text op <+> b
@@ -91,6 +90,7 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     ExpPrim (PString n)             -> tab $ ppStrget res n
     ExpPrim p                       -> tab $ res $= ppPrim p
     Tfm info [a, b] | isInfix  info -> tab $ res $= binary (infoName info) a b
+    Tfm info xs     | isPrefix info -> tab $ res $= prefix (infoName info) xs
     Tfm info xs                     -> tab $ ppOpc res (infoName info) xs
     ConvertRate to from x           -> tab $ ppConvertRate res to from x
     If info t e                     -> tab $ ppIf res (ppCond info) t e
@@ -117,6 +117,8 @@ ppExp res expr = case fmap ppPrimOrVar expr of
             a <- tab doc
             modify succ
             return a
+
+          prefix name args = text name <> tupled args
 
 ppCond :: Inline CondOp Doc -> Doc
 ppCond = ppInline ppCondOp 
@@ -213,18 +215,9 @@ ppNumOp op = case  op of
     Neg -> uno "-"    
     Pow -> bi "^"    
     Mod -> bi "%"
-    
-    ExpOp -> fun "exp"
-    IntOp -> fun "int" 
-    
-    x -> fun (firstLetterToLower $ show x)        
     where 
         bi  = binaries
         uno = unaries
-        fun = funcs
-        firstLetterToLower xs = case xs of
-            a:as -> toLower a : as
-            [] -> error "ppNumOp firstLetterToLower: empty identifier"
 
 ppRatedVar :: RatedVar -> Doc
 ppRatedVar v = ppRate (ratedVarRate v) <> int (ratedVarId v)

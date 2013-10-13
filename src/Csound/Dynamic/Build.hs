@@ -13,11 +13,13 @@ module Csound.Dynamic.Build (
 
     -- * Constructors
     -- | Basic constructors
-    prim, pref, tfm, pn, emptyE, withInits,
+    prim, opcPrefix, oprPrefix, oprInfix, 
+    numExp1, numExp2,
+    tfm, pn, emptyE, withInits,
     double, int, str, verbatim,
 
     -- ** Opcodes constructors
-    Spec1, spec1, opcs, 
+    Spec1, spec1, opcs, opr1, opr1k, infOpr,
     Specs, specs, MultiOut, mopcs, mo, 
 
     -- * Dependencies
@@ -58,8 +60,14 @@ ratedExp r = Fix . RatedExp r Nothing
 prim :: Prim -> E
 prim = noRate . ExpPrim 
 
-pref :: Name -> Signature -> Info
-pref name signature = Info name signature Prefix Nothing
+opcPrefix :: Name -> Signature -> Info
+opcPrefix name signature = Info name signature Opcode
+
+oprPrefix :: Name -> Signature -> Info
+oprPrefix name signature = Info name signature Prefix
+
+oprInfix :: Name -> Signature -> Info
+oprInfix name signature = Info name signature Infix
 
 tfm :: Info -> [E] -> E
 tfm info args = noRate $ Tfm info $ fmap toPrimOr args
@@ -103,7 +111,22 @@ spec1 :: Spec1 -> Signature
 spec1 = SingleRate . M.fromList
 
 opcs :: Name -> Spec1 -> [E] -> E
-opcs name signature = tfm (pref name $ spec1 signature)
+opcs name signature = tfm (opcPrefix name $ spec1 signature)
+
+opr1 :: Name -> E -> E
+opr1 name a = tfm (oprPrefix name $ spec1 [(Ar, [Ar]), (Kr, [Kr]), (Ir, [Ir])]) [a]
+
+opr1k :: Name -> E -> E
+opr1k name a = tfm (oprPrefix name $ spec1 [(Kr, [Kr]), (Ir, [Ir])]) [a]
+
+infOpr :: Name -> E -> E -> E
+infOpr name a b = tfm (oprInfix name $ spec1 [(Ar, [Ar, Ar]), (Kr, [Kr, Kr]), (Ir, [Ir, Ir])]) [a, b]
+
+numExp1 :: NumOp -> E -> E
+numExp1 op x = noRate $ ExpNum $ fmap toPrimOr $ PreInline op [x] 
+
+numExp2 :: NumOp -> E -> E -> E
+numExp2 op a b = noRate $ ExpNum $ fmap toPrimOr $ PreInline op [a, b]
 
 -- multiple output
 
@@ -117,7 +140,7 @@ specs = uncurry MultiRate
 type MultiOut a = Int -> a
 
 mopcs :: Name -> Specs -> [E] -> MultiOut [E]
-mopcs name signature as = \numOfOuts -> mo numOfOuts $ tfm (pref name $ specs signature) as
+mopcs name signature as = \numOfOuts -> mo numOfOuts $ tfm (opcPrefix name $ specs signature) as
 
 mo :: Int -> E -> [E]
 mo n e = zipWith (\cellId r -> select cellId r e') [0 ..] outRates
