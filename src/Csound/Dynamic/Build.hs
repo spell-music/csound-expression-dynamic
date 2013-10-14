@@ -19,7 +19,7 @@ module Csound.Dynamic.Build (
     double, int, str, verbatim,
 
     -- ** Opcodes constructors
-    Spec1, spec1, opcs, opr1, opr1k, infOpr,
+    Spec1, spec1, opcs, opr1, opr1k, infOpr, oprBy,
     Specs, specs, MultiOut, mopcs, mo, 
 
     -- * Dependencies
@@ -115,6 +115,9 @@ opcs name signature = tfm (opcPrefix name $ spec1 signature)
 
 opr1 :: Name -> E -> E
 opr1 name a = tfm (oprPrefix name $ spec1 [(Ar, [Ar]), (Kr, [Kr]), (Ir, [Ir])]) [a]
+
+oprBy :: Name -> Spec1 -> [E] -> E
+oprBy name signature = tfm (oprPrefix name $ spec1 signature)
 
 opr1k :: Name -> E -> E
 opr1k name a = tfm (oprPrefix name $ spec1 [(Kr, [Kr]), (Ir, [Ir])]) [a]
