@@ -2,7 +2,8 @@
 {-# Language TypeFamilies, TypeSynonymInstances, FlexibleInstances #-}
 -- | Boolean instances
 module Csound.Dynamic.Build.Logic(
-    when, whens
+    when1, whens,
+    ifBegin, ifEnd, elseBegin, elseIfBegin
 ) where
 
 import Control.Monad.Trans.State(State, state, evalState)
@@ -15,8 +16,8 @@ import Csound.Dynamic.Build(noRate, dep_, stmtOnly, onExp, toExp)
 ------------------------------------------------------
 -- imperative if-then-else
 
-when :: E -> Dep () -> Dep ()
-when p body = do
+when1 :: E -> Dep () -> Dep ()
+when1 p body = do
     ifBegin p
     body
     ifEnd
