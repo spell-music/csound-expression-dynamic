@@ -23,10 +23,17 @@ module Csound.Dynamic.Flags(
     Config(..)
 ) where
 
+import Control.Applicative
+
 import Data.Char
 import Data.Default
 import Data.Maybe
+import Data.Monoid
+
 import Text.PrettyPrint.Leijen
+
+mappendBool :: Bool -> Bool -> Bool
+mappendBool a b = getAny $ mappend (Any a) (Any b)
 
 data Flags = Flags
     { audioFileOutput   :: AudioFileOutput
@@ -43,6 +50,20 @@ data Flags = Flags
 instance Default Flags where
     def = Flags def def def def def def def def def def
 
+instance Monoid Flags where
+    mempty = def
+    mappend a b = Flags 
+        { audioFileOutput   = mappend (audioFileOutput a) (audioFileOutput b)
+        , idTags            = mappend (idTags a) (idTags b)
+        , rtaudio           = rtaudio a <|> rtaudio b
+        , pulseAudio        = pulseAudio a <|> pulseAudio b
+        , midiIO            = mappend (midiIO a) (midiIO b)
+        , midiRT            = mappend (midiRT a) (midiRT b)
+        , rtmidi            = rtmidi a <|> rtmidi b
+        , displays          = mappend (displays a) (displays b)
+        , config            = mappend (config a) (config b)
+        , flagsVerbatim     = mappend (flagsVerbatim a) (flagsVerbatim b) }
+
 -- Audio file output
 
 data AudioFileOutput = AudioFileOutput
@@ -56,7 +77,18 @@ data AudioFileOutput = AudioFileOutput
 
 instance Default AudioFileOutput where
     def = AudioFileOutput def def def def False False def
-   
+ 
+instance Monoid AudioFileOutput where
+    mempty = def
+    mappend a b = AudioFileOutput 
+        { formatSamples     = formatSamples a <|> formatSamples b
+        , formatType        = formatType a <|> formatType b
+        , output            = output a <|> output b
+        , input             = input a <|> input b
+        , nosound           = mappendBool (nosound a) (nosound b)
+        , nopeaks           = mappendBool (nopeaks a) (nopeaks b)
+        , dither            = dither a <|> dither b }
+
 data FormatHeader = NoHeader | RewriteHeader
 
 data FormatSamples 
@@ -87,6 +119,16 @@ data IdTags = IdTags
 instance Default IdTags where
     def = IdTags def def def def def def
 
+instance Monoid IdTags where
+    mempty = def
+    mappend a b = IdTags 
+        { idArtist      = idArtist a <|> idArtist b
+        , idComment     = idComment a <|> idComment b
+        , idCopyright   = idCopyright a <|> idCopyright b
+        , idDate        = idDate a <|> idDate b
+        , idSoftware    = idSoftware a <|> idSoftware b
+        , idTitle       = idTitle a <|> idTitle b }
+
 -- Realtime Audio Input/Output
 
 data Rtaudio 
@@ -115,6 +157,15 @@ data MidiIO = MidiIO
 instance Default MidiIO where
     def = MidiIO def def def False False
 
+instance Monoid MidiIO where
+    mempty = def
+    mappend a b = MidiIO 
+        { midiFile          = midiFile a <|> midiFile b
+        , midiOutFile       = midiOutFile a <|> midiOutFile b
+        , muteTracks        = muteTracks a <|> muteTracks b
+        , rawControllerMode = mappendBool (rawControllerMode a)  (rawControllerMode b)
+        , terminateOnMidi   = mappendBool (terminateOnMidi a) (terminateOnMidi b) }
+
 -- MIDI Realtime Input/Ouput
 
 data MidiRT = MidiRT
@@ -131,7 +182,19 @@ instance Default MidiRT where
     def = MidiRT def def def def
                  def def def def
 
-data Rtmidi = PortMidi | AlsaMidi | MmeMidi | WinmmMidi | NoRtmidi
+instance Monoid MidiRT where
+    mempty = def
+    mappend a b = MidiRT 
+        { midiDevice        = midiDevice a <|> midiDevice b
+        , midiKey           = midiKey a <|> midiKey b
+        , midiKeyCps        = midiKeyCps a <|> midiKeyCps b
+        , midiKeyOct        = midiKeyOct a <|> midiKeyOct b
+        , midiKeyPch        = midiKeyPch a <|> midiKeyPch b
+        , midiVelocity      = midiVelocity a <|> midiVelocity b
+        , midiVelocityAmp   = midiVelocityAmp a <|> midiVelocityAmp b
+        , midiOutDevice     = midiOutDevice a <|> midiOutDevice b }
+
+data Rtmidi = PortMidi | AlsaMidi | MmeMidi | WinmmMidi | VirtualMidi | NoRtmidi
 
 -- Display
 
@@ -159,6 +222,23 @@ instance Default Displays where
             False False
             def
 
+instance Monoid Displays where
+    mempty = def
+    mappend a b = Displays 
+        { csdLineNums       = csdLineNums a <|> csdLineNums b
+        , displayMode       = displayMode a <|> displayMode b
+        , displayHeartbeat  = displayHeartbeat a <|> displayHeartbeat b
+        , messageLevel      = messageLevel a <|> messageLevel b
+        , mAmps             = mAmps a <|> mAmps b
+        , mRange            = mRange a <|> mRange b
+        , mWarnings         = mWarnings a <|> mWarnings b
+        , mDb               = mDb a <|> mDb b
+        , mColours          = mColours a <|> mColours b
+        , mBenchmarks       = mBenchmarks a <|> mBenchmarks b
+        , msgColor          = mappendBool (msgColor a) (msgColor b)
+        , displayVerbose    = mappendBool (displayVerbose a) (displayVerbose b)
+        , listOpcodes       = listOpcodes a <|> listOpcodes b }        
+
 -- Performance Configuration and Control
 
 data Config = Config
@@ -179,6 +259,22 @@ instance Default Config where
     def = Config def def def def def def def
                  False
                  def def def def   
+
+instance Monoid Config where
+    mempty = def
+    mappend a b = Config
+        { hwBuf     = hwBuf a <|> hwBuf b
+        , ioBuf     = ioBuf a <|> ioBuf b
+        , newKr     = newKr a <|> newKr b
+        , newSr     = newSr a <|> newSr b
+        , scoreIn   = scoreIn a <|> scoreIn b
+        , omacro    = omacro a <|> omacro b
+        , smacro    = smacro a <|> smacro b
+        , setSched  = mappendBool (setSched a) (setSched b)
+        , schedNum  = schedNum a <|> schedNum b
+        , strsetN   = strsetN a <|> strsetN b
+        , skipSeconds  = skipSeconds a <|> skipSeconds b
+        , setTempo  = setTempo a <|> setTempo b }
 
 ----------------------------------------------------
 -- rendering
@@ -314,6 +410,7 @@ instance Pretty MidiRT where
     
 instance Pretty Rtmidi where
     pretty x = text $ p3 "rtmidi" $ case x of
+        VirtualMidi -> "virtual"
         PortMidi    -> "PortMidi"
         AlsaMidi    -> "alsa"
         MmeMidi     -> "mme"
