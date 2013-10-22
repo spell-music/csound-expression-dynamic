@@ -126,6 +126,7 @@ deduceRate desiredRates expr = case ratedExpExp expr of
     where tfmNoRate name rates tab = case sort rates of
               [Xr]  -> tfmNoRate name [Ar] tab                
               Xr:as -> tfmNoRate name as tab
+              as | any (== Ir) as  -> fromJust $ find (flip M.member tab) (Ir : as ++ [minBound .. maxBound])         
               as -> fromJust $ find (flip M.member tab) (as ++ [minBound .. maxBound])         
 
 rateExp :: Rate -> Exp Int -> Exp RatedVar 
