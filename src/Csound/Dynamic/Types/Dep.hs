@@ -1,13 +1,18 @@
 -- | Dependency tracking
 module Csound.Dynamic.Types.Dep(
-    DepT(..), runDepT, 
-    depT, depT_, mdepT, stripDepT, stmtOnlyT, execDepT            
+    DepT(..), runDepT,     
+    -- * Dependencies
+    depT, depT_, mdepT, stripDepT, stmtOnlyT, execDepT,
+
+    -- * Variables
+    newLocalVar, newLocalVars,
+    writeVar, readVar, readOnlyVar, initVar, appendVarBy
 ) where
 
 import Control.Applicative
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
-import Control.Monad(ap, liftM)
+import Control.Monad(ap, liftM, zipWithM_)
 import Data.Default
 
 import Data.Fix(Fix(..))
@@ -39,6 +44,9 @@ instance Monad m => Monad (DepT m) where
     return = DepT . return
     ma >>= mf = DepT $ unDepT ma >>= unDepT . mf
 
+instance MonadTrans DepT where
+    lift ma = DepT $ lift ma
+   
 runDepT :: DepT m a -> m (a, LocalHistory)
 runDepT a = runStateT (unDepT a) def
 
@@ -69,5 +77,44 @@ emptyE :: E
 emptyE = noRate $ EmptyExp 
 
 -- local variables
+
+newLocalVars :: Monad m => [Rate] -> m [E] -> DepT m [Var]
+newLocalVars rs vs = do
+    vars <- mapM newVar rs
+    zipWithM_ initVar vars =<< lift vs
+    return vars
+
+newLocalVar :: Monad m => Rate -> m E -> DepT m Var
+newLocalVar rate val = do
+    var <- newVar rate
+    initVar var =<< lift val
+    return var
+
+newVar :: Monad m => Rate -> DepT m Var
+newVar rate = DepT $ do
+    s <- get
+    let v = Var LocalVar rate (show $ newLocalVarId s)    
+    put $ s { newLocalVarId = succ $ newLocalVarId s }
+    return v
+
+--------------------------------------------------
+-- variables
+
+-- generic funs
+
+writeVar :: Monad m => Var -> E -> DepT m ()
+writeVar v x = depT_ $ return $ noRate $ WriteVar v $ toPrimOr x 
+
+readVar :: Monad m => Var -> DepT m E
+readVar v = depT $ return $ noRate $ ReadVar v
+
+readOnlyVar :: Var -> E
+readOnlyVar v = noRate $ ReadVar v
+
+initVar :: Monad m => Var -> E -> DepT m ()
+initVar v x = depT_ $ return $ noRate $ InitVar v $ toPrimOr x
+
+appendVarBy :: Monad m => (E -> E -> E) -> Var -> E -> DepT m ()
+appendVarBy op v x = writeVar v . op x =<< readVar v
 
 

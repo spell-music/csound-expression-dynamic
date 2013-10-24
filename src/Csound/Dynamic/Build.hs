@@ -22,9 +22,6 @@ module Csound.Dynamic.Build (
     Spec1, spec1, opcs, opr1, opr1k, infOpr, oprBy,
     Specs, specs, MultiOut, mopcs, mo, 
 
-    -- * Variables
-    writeVar, readVar, readOnlyVar, initVar, appendVarBy,
-
     -- * Global init statements
     setSr, setKsmps, setNchnls, setKr, setZeroDbfs
 ) where
@@ -133,27 +130,6 @@ mo n e = zipWith (\cellId r -> select cellId r e') [0 ..] outRates
           setMultiRate _ _ = error "Tuple.hs: multiOutsSection -- argument should be Tfm-expression"  
             
           select cellId rate expr = withRate rate $ Select rate cellId (PrimOr $ Right expr)
-
-
---------------------------------------------------
--- variables
-
--- generic funs
-
-writeVar :: Monad m => Var -> E -> DepT m ()
-writeVar v x = depT_ $ return $ noRate $ WriteVar v $ toPrimOr x 
-
-readVar :: Monad m => Var -> DepT m E
-readVar v = depT $ return $ noRate $ ReadVar v
-
-readOnlyVar :: Var -> E
-readOnlyVar v = noRate $ ReadVar v
-
-initVar :: Monad m => Var -> E -> DepT m ()
-initVar v x = depT_ $ return $ noRate $ InitVar v $ toPrimOr x
-
-appendVarBy :: Monad m => (E -> E -> E) -> Var -> E -> DepT m ()
-appendVarBy op v x = writeVar v . op x =<< readVar v
 
 -- rate coversion
 
