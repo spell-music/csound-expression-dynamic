@@ -17,17 +17,17 @@ import Csound.Dynamic.Tfm.DeduceTypes
 import Csound.Dynamic.Tfm.UnfoldMultiOuts
 
 import Csound.Dynamic.Types hiding (Var)
-import Csound.Dynamic.Build(execDep, getRates, isMultiOutSignature)
+import Csound.Dynamic.Build(getRates, isMultiOutSignature)
 import Csound.Dynamic.Render.Pretty
 
 type Dag f = [(Int, f Int)]
 
-renderInstr :: Instr -> Doc
-renderInstr a = ppInstr (instrName a) $ renderInstrBody (instrBody a)
+renderInstr :: (Functor m, Monad m) => Instr m -> m Doc
+renderInstr a = fmap (ppInstr (instrName a)) $ renderInstrBody (instrBody a)
 
-renderInstrBody :: Dep () -> Doc
-renderInstrBody a = P.vcat $ flip evalState 0 $ 
-    mapM (uncurry ppStmt . clearEmptyResults) $ collectRates $ toDag (execDep a)
+renderInstrBody :: (Functor m, Monad m) => DepT m () -> m Doc
+renderInstrBody a = fmap phi $ execDepT a
+    where phi = P.vcat . flip evalState 0 . mapM (uncurry ppStmt . clearEmptyResults) . collectRates . toDag 
 
 -------------------------------------------------------------
 -- E -> Dag

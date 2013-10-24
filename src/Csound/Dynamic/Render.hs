@@ -4,23 +4,26 @@ module Csound.Dynamic.Render(
 
 import qualified Text.PrettyPrint.Leijen as P
 
-import Csound.Dynamic.Types
 import Csound.Dynamic.Render.Instr
 import Csound.Dynamic.Render.Pretty
+import Csound.Dynamic.Types
 
-renderCsd :: Csd -> String
-renderCsd a = show $ ppCsdFile 
-    (renderFlags $ csdFlags a)
-    (renderOrc   $ csdOrc a)
-    (renderSco   $ csdSco a)
+renderCsd :: (Functor m, Monad m) => Csd m -> m String
+renderCsd a = do
+    orcDoc <- renderOrc $ csdOrc a
+    return $ show $ ppCsdFile 
+                (renderFlags $ csdFlags a)
+                orcDoc
+                (renderSco   $ csdSco a)
 
 renderFlags :: Flags -> Doc
 renderFlags = P.pretty
 
-renderOrc :: Orc -> Doc
-renderOrc a = vcatSep
-    $ renderInstrBody (orcHead a)
-    : fmap renderInstr (orcInstruments a)
+renderOrc :: (Functor m, Monad m) => Orc m -> m Doc
+renderOrc a = do
+    headExpr    <- renderInstrBody (orcHead a)
+    instrExprs  <- mapM renderInstr (orcInstruments a)
+    return $ vcatSep $ headExpr : instrExprs
 
 renderSco :: Sco -> Doc
 renderSco a = vcatSep 

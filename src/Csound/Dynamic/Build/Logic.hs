@@ -11,18 +11,18 @@ import qualified Data.IntMap as IM(fromList)
 
 import Data.Boolean
 import Csound.Dynamic.Types
-import Csound.Dynamic.Build(noRate, dep_, stmtOnly, onExp, toExp)
+import Csound.Dynamic.Build(onExp, toExp)
 
 ------------------------------------------------------
 -- imperative if-then-else
 
-when1 :: E -> Dep () -> Dep ()
+when1 :: Monad m => E -> DepT m () -> DepT m ()
 when1 p body = do
     ifBegin p
     body
     ifEnd
 
-whens :: [(E, Dep ())] -> Dep () -> Dep ()
+whens :: Monad m => [(E, DepT m ())] -> DepT m () -> DepT m ()
 whens bodies el = case bodies of
     []   -> el
     a:as -> do
@@ -34,20 +34,20 @@ whens bodies el = case bodies of
         ifEnd
     where elseIfs = mapM_ (\(p, body) -> elseIfBegin p >> body)
 
-ifBegin :: E -> Dep ()
+ifBegin :: Monad m => E -> DepT m ()
 ifBegin = withCond IfBegin
 
-elseIfBegin :: E -> Dep ()
+elseIfBegin :: Monad m => E -> DepT m ()
 elseIfBegin = withCond ElseIfBegin
 
-elseBegin :: Dep ()
-elseBegin = stmtOnly ElseBegin
+elseBegin :: Monad m => DepT m ()
+elseBegin = stmtOnlyT ElseBegin
 
-ifEnd :: Dep ()
-ifEnd = stmtOnly IfEnd
+ifEnd :: Monad m => DepT m ()
+ifEnd = stmtOnlyT IfEnd
 
-withCond :: (CondInfo (PrimOr E) -> MainExp (PrimOr E)) -> E -> Dep ()
-withCond stmt p = dep_ $ noRate $ stmt (condInfo p)
+withCond :: Monad m => (CondInfo (PrimOr E) -> MainExp (PrimOr E)) -> E -> DepT m ()
+withCond stmt p = depT_ $ return $ noRate $ stmt (condInfo p)
 
 instance Boolean E where
     true = boolOp0 TrueOp

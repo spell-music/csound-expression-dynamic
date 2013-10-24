@@ -31,8 +31,11 @@ Library
     Csound.Dynamic
 
     Csound.Dynamic.Types
-    Csound.Dynamic.Flags
-    Csound.Dynamic.EventList
+    Csound.Dynamic.Types.Exp
+    Csound.Dynamic.Types.Dep
+    Csound.Dynamic.Types.CsdFile
+    Csound.Dynamic.Types.Flags
+    Csound.Dynamic.Types.EventList
 
     Csound.Dynamic.Build
     Csound.Dynamic.Build.Numeric

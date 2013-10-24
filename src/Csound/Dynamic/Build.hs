@@ -6,7 +6,7 @@ module Csound.Dynamic.Build (
 
     -- * Rates
     -- | Updating rates
-    noRate, withRate, ratedExp, setRate, 
+    setRate, 
   
     -- * Queries
     getRates, isMultiOutSignature, getPrimUnsafe,
@@ -15,30 +15,20 @@ module Csound.Dynamic.Build (
     -- | Basic constructors
     prim, opcPrefix, oprPrefix, oprInfix, 
     numExp1, numExp2,
-    tfm, pn, emptyE, withInits,
+    tfm, pn, withInits,
     double, int, str, verbatim,
 
     -- ** Opcodes constructors
     Spec1, spec1, opcs, opr1, opr1k, infOpr, oprBy,
     Specs, specs, MultiOut, mopcs, mo, 
 
-    -- * Dependencies
-    dep, dep_, mdep, stripDep, stmtOnly, execDep,
-
     -- * Variables
     writeVar, readVar, readOnlyVar, initVar, appendVarBy,
-
-    -- * Instruments
-    intInstr,
-    
-    -- * Score
-    alwaysOn,
 
     -- * Global init statements
     setSr, setKsmps, setNchnls, setKr, setZeroDbfs
 ) where
 
-import Control.Monad.Trans.State.Strict
 import qualified Data.Map as M(fromList)
 
 import Data.Fix(Fix(..))
@@ -48,15 +38,6 @@ import Csound.Dynamic.Types
 ------------------------------------------------
 -- basic constructors
   
-noRate :: Exp E -> E
-noRate = ratedExp Nothing
-  
-withRate :: Rate -> Exp E -> E
-withRate r = ratedExp (Just r)
-
-ratedExp :: Maybe Rate -> Exp E -> E
-ratedExp r = Fix . RatedExp r Nothing
-
 prim :: Prim -> E
 prim = noRate . ExpPrim 
 
@@ -75,8 +56,6 @@ tfm info args = noRate $ Tfm info $ fmap toPrimOr args
 pn :: Int -> E
 pn = prim . P
 
-emptyE :: E 
-emptyE = noRate $ EmptyExp 
 
 withInits :: E -> [E] -> E
 withInits a es = onExp phi a
@@ -96,8 +75,8 @@ str = prim . PrimString
 int :: Int -> E
 int = prim . PrimInt
 
-verbatim :: String -> Dep ()
-verbatim = stmtOnly . Verbatim
+verbatim :: Monad m => String -> DepT m ()
+verbatim = stmtOnlyT . Verbatim
 
 ----------------------------------------------------------------------
 -- constructing opcodes
@@ -139,9 +118,6 @@ type Specs = ([Rate], [Rate])
 specs :: Specs -> Signature
 specs = uncurry MultiRate 
 
--- | Multiple output. Specify the number of outputs to get the result.
-type MultiOut a = Int -> a
-
 mopcs :: Name -> Specs -> [E] -> MultiOut [E]
 mopcs name signature as = \numOfOuts -> mo numOfOuts $ tfm (opcPrefix name $ specs signature) as
 
@@ -164,26 +140,25 @@ mo n e = zipWith (\cellId r -> select cellId r e') [0 ..] outRates
 
 -- generic funs
 
-writeVar :: Var -> E -> Dep ()
-writeVar v x = dep_ $ noRate $ WriteVar v $ toPrimOr x 
+writeVar :: Monad m => Var -> E -> DepT m ()
+writeVar v x = depT_ $ return $ noRate $ WriteVar v $ toPrimOr x 
 
-readVar :: Var -> Dep E
-readVar v = dep $ noRate $ ReadVar v
+readVar :: Monad m => Var -> DepT m E
+readVar v = depT $ return $ noRate $ ReadVar v
 
 readOnlyVar :: Var -> E
 readOnlyVar v = noRate $ ReadVar v
 
-initVar :: Var -> E -> Dep ()
-initVar v x = dep_ $ noRate $ InitVar v $ toPrimOr x
+initVar :: Monad m => Var -> E -> DepT m ()
+initVar v x = depT_ $ return $ noRate $ InitVar v $ toPrimOr x
 
-appendVarBy :: (E -> E -> E) -> Var -> E -> Dep ()
+appendVarBy :: Monad m => (E -> E -> E) -> Var -> E -> DepT m ()
 appendVarBy op v x = writeVar v . op x =<< readVar v
 
 -- rate coversion
 
 setRate :: Rate -> E -> E
 setRate r a = Fix $ (\x -> x { ratedExpRate = Just r }) $ unFix a
-
 
 getRates :: MainExp a -> [Rate]
 getRates (Tfm info _) = case infoSignature info of
@@ -212,47 +187,13 @@ onExp :: (Exp E -> Exp E) -> E -> E
 onExp f x = case unFix x of
     a -> Fix $ a{ ratedExpExp = f (ratedExpExp a) }
 
-----------------------------------------------------------------
--- dependency tracking
-
-dep :: E -> Dep E
-dep a = Dep $ state $ \s -> 
-    let x = Fix $ (unFix a) { ratedExpDepends = s }
-    in  (x, Just x)
-
-dep_ :: E -> Dep ()
-dep_ = fmap (const ()) . dep
-
-mdep :: MultiOut [E] -> MultiOut (Dep [E])
-mdep a = mapM dep . a
-
-stripDep :: Dep a -> a
-stripDep (Dep a) = evalState a Nothing
-
-stmtOnly :: Exp E -> Dep ()
-stmtOnly stmt = dep_ $ noRate stmt
-
-execDep :: Dep a -> E
-execDep a = maybe emptyE id $ snd $ runDep a
-
-----------------------------------------------------------------
--- instruments
-
-intInstr :: Int -> Dep () -> Instr
-intInstr n expr = Instr (intInstrId n) expr
-
-----------------------------------------------------------------
--- score
-
-alwaysOn :: InstrId -> (InstrId, [CsdEvent Note])
-alwaysOn instrId = (instrId, [(0, -1, [])])
 
 ----------------------------------------------------------------
 -- global inits
 
-setSr, setKsmps, setNchnls, setKr :: Int -> Dep ()
+setSr, setKsmps, setNchnls, setKr :: Monad m => Int -> DepT m ()
     
-setZeroDbfs :: Double -> Dep ()
+setZeroDbfs :: Monad m => Double -> DepT m  ()
 
 setSr       = gInit "sr"
 setKr       = gInit "kr"
@@ -260,9 +201,9 @@ setNchnls   = gInit "nchnls"
 setKsmps    = gInit "ksmps"
 setZeroDbfs = gInitDouble "0dbfs"
 
-gInit :: String -> Int -> Dep ()
+gInit :: Monad m => String -> Int -> DepT m ()
 gInit name val = writeVar (VarVerbatim Ir name) (int val)
 
-gInitDouble :: String -> Double -> Dep ()
+gInitDouble :: Monad m => String -> Double -> DepT m ()
 gInitDouble name val = writeVar (VarVerbatim Ir name) (double val)
 

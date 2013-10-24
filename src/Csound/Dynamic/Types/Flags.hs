@@ -1,5 +1,5 @@
 -- | Csound's command line flags. See original documentation for detailed overview: <http://www.csounds.com/manual/html/CommandFlagsCategory.html>
-module Csound.Dynamic.Flags(
+module Csound.Dynamic.Types.Flags(
     Flags(..),
 
     -- * Audio file output
