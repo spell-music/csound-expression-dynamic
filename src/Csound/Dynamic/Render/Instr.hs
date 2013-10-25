@@ -22,12 +22,12 @@ import Csound.Dynamic.Render.Pretty
 
 type Dag f = [(Int, f Int)]
 
-renderInstr :: (Functor m, Monad m) => Instr m -> m Doc
-renderInstr a = fmap (ppInstr (instrName a)) $ renderInstrBody (instrBody a)
+renderInstr :: Instr -> Doc
+renderInstr a = ppInstr (instrName a) $ renderInstrBody (instrBody a)
 
-renderInstrBody :: (Functor m, Monad m) => DepT m () -> m Doc
-renderInstrBody a = fmap phi $ execDepT a
-    where phi = P.vcat . flip evalState 0 . mapM (uncurry ppStmt . clearEmptyResults) . collectRates . toDag 
+renderInstrBody :: E -> Doc
+renderInstrBody = P.vcat . flip evalState 0 
+    . mapM (uncurry ppStmt . clearEmptyResults) . collectRates . toDag 
 
 -------------------------------------------------------------
 -- E -> Dag

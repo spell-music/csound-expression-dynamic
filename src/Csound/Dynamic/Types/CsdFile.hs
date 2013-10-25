@@ -1,28 +1,29 @@
 -- | The Csound file
 module Csound.Dynamic.Types.CsdFile(            
-    Csd(..), Flags, Orc(..), Sco(..), Instr(..),
+    Csd(..), Flags, Orc(..), Sco(..), Instr(..), InstrBody,
     intInstr, alwaysOn
 ) where
 
 import Csound.Dynamic.Types.Exp
-import Csound.Dynamic.Types.Dep
 import Csound.Dynamic.Types.Flags
 import Csound.Dynamic.Types.EventList
 
-data Csd m = Csd
+data Csd = Csd
     { csdFlags  :: Flags
-    , csdOrc    :: Orc m
+    , csdOrc    :: Orc
     , csdSco    :: Sco
     } 
 
-data Orc m = Orc
-    { orcHead           :: DepT m ()
-    , orcInstruments    :: [Instr m]
+data Orc = Orc
+    { orcHead           :: InstrBody
+    , orcInstruments    :: [Instr]
     }
 
-data Instr m = Instr
+type InstrBody = E
+
+data Instr = Instr
     { instrName :: InstrId
-    , instrBody :: DepT m ()
+    , instrBody :: InstrBody
     }
 
 data Sco = Sco 
@@ -33,7 +34,7 @@ data Sco = Sco
 ----------------------------------------------------------------
 -- instruments
 
-intInstr :: Monad m => Int -> DepT m () -> Instr m
+intInstr :: Int -> E -> Instr
 intInstr n expr = Instr (intInstrId n) expr
 
 ----------------------------------------------------------------

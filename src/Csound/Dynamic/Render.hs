@@ -8,22 +8,20 @@ import Csound.Dynamic.Render.Instr
 import Csound.Dynamic.Render.Pretty
 import Csound.Dynamic.Types
 
-renderCsd :: (Functor m, Monad m) => Csd m -> m String
-renderCsd a = do
-    orcDoc <- renderOrc $ csdOrc a
-    return $ show $ ppCsdFile 
-                (renderFlags $ csdFlags a)
-                orcDoc
-                (renderSco   $ csdSco a)
+renderCsd :: Csd -> String
+renderCsd a = show $ ppCsdFile 
+    (renderFlags $ csdFlags a)
+    (renderOrc $ csdOrc a)
+    (renderSco   $ csdSco a)
 
 renderFlags :: Flags -> Doc
 renderFlags = P.pretty
 
-renderOrc :: (Functor m, Monad m) => Orc m -> m Doc
-renderOrc a = do
-    headExpr    <- renderInstrBody (orcHead a)
-    instrExprs  <- mapM renderInstr (orcInstruments a)
-    return $ vcatSep $ headExpr : instrExprs
+renderOrc :: Orc -> Doc
+renderOrc a = vcatSep $ headExpr : instrExprs
+    where
+        headExpr    = renderInstrBody (orcHead a)
+        instrExprs  = fmap renderInstr (orcInstruments a)
 
 renderSco :: Sco -> Doc
 renderSco a = vcatSep 
