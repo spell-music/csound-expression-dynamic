@@ -1,6 +1,6 @@
 -- | Dependency tracking
 module Csound.Dynamic.Types.Dep(
-    DepT(..), runDepT,     
+    DepT(..), runDepT, LocalHistory(..),    
     -- * Dependencies
     depT, depT_, mdepT, stripDepT, stmtOnlyT, execDepT,
 
@@ -55,23 +55,22 @@ execDepT a = liftM (maybe emptyE id . expDependency . snd) $ runDepT a
 
 -- dependency tracking
 
-depT :: Monad m => m E -> DepT m E
-depT ma = DepT $ StateT $ \s -> do
-    a <- ma
+depT :: Monad m => E -> DepT m E
+depT a = DepT $ StateT $ \s -> do
     let x = Fix $ (unFix a) { ratedExpDepends = expDependency s }
     return (x, s { expDependency = Just x })    
 
-depT_ :: (Monad m) => m E -> DepT m ()
+depT_ :: (Monad m) => E -> DepT m ()
 depT_ = fmap (const ()) . depT
 
-mdepT :: (Monad m) => m (MultiOut [E]) -> MultiOut (DepT m [E])
-mdepT mas = \n -> mapM (depT . return) =<< DepT (lift (liftM ( $ n) mas))
+mdepT :: (Monad m) => MultiOut [E] -> MultiOut (DepT m [E])
+mdepT mas = \n -> mapM depT $ ( $ n) mas
 
 stripDepT :: Monad m => DepT m a -> m a
 stripDepT (DepT a) = evalStateT a def 
 
 stmtOnlyT :: Monad m => Exp E -> DepT m ()
-stmtOnlyT stmt = depT_ $ return $ noRate stmt
+stmtOnlyT stmt = depT_ $ noRate stmt
 
 emptyE :: E 
 emptyE = noRate $ EmptyExp 
@@ -103,16 +102,16 @@ newVar rate = DepT $ do
 -- generic funs
 
 writeVar :: Monad m => Var -> E -> DepT m ()
-writeVar v x = depT_ $ return $ noRate $ WriteVar v $ toPrimOr x 
+writeVar v x = depT_ $ noRate $ WriteVar v $ toPrimOr x 
 
 readVar :: Monad m => Var -> DepT m E
-readVar v = depT $ return $ noRate $ ReadVar v
+readVar v = depT $ noRate $ ReadVar v
 
 readOnlyVar :: Var -> E
 readOnlyVar v = noRate $ ReadVar v
 
 initVar :: Monad m => Var -> E -> DepT m ()
-initVar v x = depT_ $ return $ noRate $ InitVar v $ toPrimOr x
+initVar v x = depT_ $ noRate $ InitVar v $ toPrimOr x
 
 appendVarBy :: Monad m => (E -> E -> E) -> Var -> E -> DepT m ()
 appendVarBy op v x = writeVar v . op x =<< readVar v

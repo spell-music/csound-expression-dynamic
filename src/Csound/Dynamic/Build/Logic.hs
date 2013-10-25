@@ -47,7 +47,7 @@ ifEnd :: Monad m => DepT m ()
 ifEnd = stmtOnlyT IfEnd
 
 withCond :: Monad m => (CondInfo (PrimOr E) -> MainExp (PrimOr E)) -> E -> DepT m ()
-withCond stmt p = depT_ $ return $ noRate $ stmt (condInfo p)
+withCond stmt p = depT_ $ noRate $ stmt (condInfo p)
 
 instance Boolean E where
     true = boolOp0 TrueOp
