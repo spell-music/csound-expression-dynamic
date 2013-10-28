@@ -15,11 +15,11 @@ module Csound.Dynamic.Build (
     -- | Basic constructors
     prim, opcPrefix, oprPrefix, oprInfix, 
     numExp1, numExp2,
-    tfm, pn, withInits,
+    tfm, tfmNoInlineArgs, pn, withInits,
     double, int, str, verbatim,
 
     -- ** Opcodes constructors
-    Spec1, spec1, opcs, opr1, opr1k, infOpr, oprBy,
+    Spec1, spec1, opcs, opcsNoInlineArgs, opr1, opr1k, infOpr, oprBy,
     Specs, specs, MultiOut, mopcs, mo, 
 
     -- * Global init statements
@@ -50,9 +50,11 @@ oprInfix name signature = Info name signature Infix
 tfm :: Info -> [E] -> E
 tfm info args = noRate $ Tfm info $ fmap toPrimOr args
 
+tfmNoInlineArgs :: Info -> [E] -> E
+tfmNoInlineArgs info args = noRate $ Tfm info $ fmap (PrimOr . Right) args
+
 pn :: Int -> E
 pn = prim . P
-
 
 withInits :: E -> [E] -> E
 withInits a es = onExp phi a
@@ -88,6 +90,9 @@ spec1 = SingleRate . M.fromList
 
 opcs :: Name -> Spec1 -> [E] -> E
 opcs name signature = tfm (opcPrefix name $ spec1 signature)
+
+opcsNoInlineArgs :: Name -> Spec1 -> [E] -> E
+opcsNoInlineArgs name signature = tfmNoInlineArgs (opcPrefix name $ spec1 signature)
 
 opr1 :: Name -> E -> E
 opr1 name a = tfm (oprPrefix name $ spec1 [(Ar, [Ar]), (Kr, [Kr]), (Ir, [Ir])]) [a]
