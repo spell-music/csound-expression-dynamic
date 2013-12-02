@@ -132,7 +132,7 @@ deduceRate desiredRates expr = case ratedExpExp expr of
 rateExp :: Rate -> Exp Int -> Exp RatedVar 
 rateExp curRate expr = case expr of
     ExpPrim (P n) | curRate == Sr -> ExpPrim (PString n)
-    Tfm i xs -> Tfm i $ mergeWithPrimOrBy (flip ratedVar) xs (ratesFromSignature curRate (infoSignature i))
+    Tfm i xs -> Tfm i $ mergeWithPrimOr (ratesFromSignature curRate (infoSignature i)) xs
     Select rate pid a -> Select rate pid (fmap (ratedVar Xr) a)    
     If p t e -> If (rec2 condRate p) (rec1 curRate t) (rec1 curRate e) 
     ExpNum _ -> rec2 curRate expr    
@@ -160,10 +160,15 @@ rateExp curRate expr = case expr of
           rec1 r = fmap (ratedVar r)
 
           msg txt = "Csound.Dynamic.Render.Instr.rateExp: " ++ txt 
-
           
-
-mergeWithPrimOrBy :: (a -> b -> c) -> [PrimOr a] -> [b] -> [PrimOr c]
-mergeWithPrimOrBy cons = zipWith (\primOr b -> fmap (flip cons b) primOr)
+mergeWithPrimOr :: [Rate] -> [PrimOr Int] -> [PrimOr (Var Rate)]
+mergeWithPrimOr = zipWith phi
+    where 
+        phi r (PrimOr x) = PrimOr $ case x of
+            Left  p -> Left $ updateVarTargetRate r p 
+            Right n -> Right $ ratedVar r n
+        updateVarTargetRate r p = case p of
+            PrimVar _ v -> PrimVar r v
+            _           -> p
 
 

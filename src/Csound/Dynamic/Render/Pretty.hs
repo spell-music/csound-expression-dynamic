@@ -58,6 +58,22 @@ ppPrim x = case x of
     PrimInt n -> int n
     PrimDouble d -> double d
     PrimString s -> dquotes $ text s
+    PrimVar targetRate v -> ppConverter targetRate (varRate v) $ ppVar v
+    where
+        ppConverter dst src t 
+            | dst == src = t            
+            | dst == Ar && src == Kr = a(t) 
+            | dst == Ar && src == Ir = a(k(t))            
+            | dst == Kr  = k(t)
+            | dst == Ir && src == Kr = i(t)
+            | dst == Ir && src == Ar = i(k(t))
+            | otherwise = t
+            where 
+                tfm ch v = hcat [char ch, parens v]    
+                a = tfm 'a'
+                k = tfm 'k'
+                i = tfm 'i'
+
     
 ppGen :: Int -> Gen -> Doc
 ppGen tabId ft = char 'f' 

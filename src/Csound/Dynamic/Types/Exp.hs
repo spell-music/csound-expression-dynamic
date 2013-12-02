@@ -98,7 +98,9 @@ toPrimOr :: E -> PrimOr E
 toPrimOr a = PrimOr $ case ratedExpExp $ unFix a of
     ExpPrim (PString _) -> Right a
     ExpPrim p -> Left p
+    ReadVar v | noDeps -> Left (PrimVar (varRate v) v)
     _         -> Right a
+    where noDeps = isNothing $ ratedExpDepends $ unFix a
 
 -- Expressions with inlining.
 type Exp a = MainExp (PrimOr a)
@@ -208,6 +210,9 @@ data Prim
     | PrimDouble Double 
     | PrimString String 
     | PrimInstrId InstrId
+    | PrimVar 
+        { primVarTargetRate :: Rate 
+        , primVar           :: Var }
     deriving (Show, Eq, Ord)
 
 -- Gen routine.
