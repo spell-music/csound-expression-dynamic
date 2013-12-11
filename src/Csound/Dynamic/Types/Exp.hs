@@ -2,7 +2,7 @@
 {-# Language DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module Csound.Dynamic.Types.Exp(
     E, RatedExp(..), isEmptyExp, RatedVar, ratedVar, ratedVarRate, ratedVarId, 
-    ratedExp, noRate, withRate,
+    ratedExp, noRate, withRate, setRate,
     Exp, toPrimOr, PrimOr(..), MainExp(..), Name, 
     InstrId(..), intInstrId, ratioInstrId, stringInstrId,
     VarType(..), Var(..), Info(..), OpcFixity(..), Rate(..), 
@@ -86,6 +86,10 @@ noRate = ratedExp Nothing
 withRate :: Rate -> Exp E -> E
 withRate r = ratedExp (Just r)
 
+-- rate coversion
+
+setRate :: Rate -> E -> E
+setRate r a = Fix $ (\x -> x { ratedExpRate = Just r }) $ unFix a
 
 -- | It's a primitive value or something else. It's used for inlining
 -- of the constants (primitive values).

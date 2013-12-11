@@ -138,7 +138,7 @@ rateExp curRate expr = case expr of
     ExpNum _ -> rec2 curRate expr    
     ReadVar v -> ReadVar v
     WriteVar v a -> WriteVar v $ rec1 (varRate v) a
-    InitVar v a -> InitVar v $ rec1 (varRate v) a
+    InitVar v a -> InitVar v $ rec1 Ir a -- rec1 (varRate v) a
     ExpPrim p -> ExpPrim p
     IfBegin _ -> rec2 condRate expr
     ElseIfBegin _ -> rec2 condRate expr

@@ -5,9 +5,6 @@ module Csound.Dynamic.Build (
     toExp, onExp, 
 
     -- * Rates
-    -- | Updating rates
-    setRate, 
-  
     -- * Queries
     getRates, isMultiOutSignature, getPrimUnsafe,
 
@@ -136,10 +133,6 @@ mo n e = zipWith (\cellId r -> select cellId r e') [0 ..] outRates
             
           select cellId rate expr = withRate rate $ Select rate cellId (PrimOr $ Right expr)
 
--- rate coversion
-
-setRate :: Rate -> E -> E
-setRate r a = Fix $ (\x -> x { ratedExpRate = Just r }) $ unFix a
 
 getRates :: MainExp a -> [Rate]
 getRates (Tfm info _) = case infoSignature info of
