@@ -31,7 +31,7 @@ csdEventTotalDur (start, dur, _) = start + dur
 -- The properties:
 --
 -- > forall a . toCsdEventList (singleCsdEvent a) === CsdEventList 1 [(0, 1, a)]
-class CsdSco f where    
+class Functor f => CsdSco f where    
     -- | Converts a given score representation to the canonical one.
     toCsdEventList :: f a -> CsdEventList a
     -- | Constructs a scores that contains only one event. The event happens immediately and lasts for 1 second.
