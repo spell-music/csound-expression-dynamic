@@ -56,7 +56,10 @@ pn = prim . P
 withInits :: E -> [E] -> E
 withInits a es = onExp phi a
     where phi x = case x of
+            -- for opcodes with single output
             Tfm t xs -> Tfm t (xs ++ (fmap toPrimOr es))
+            -- for opcodes with multiple outputs
+            Select r n expr -> Select r n $ fmap (\t -> withInits t es) expr
             _        -> x
 
 -- | Converts Haskell's doubles to Csound's doubles
