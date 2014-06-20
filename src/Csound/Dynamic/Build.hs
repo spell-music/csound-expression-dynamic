@@ -13,7 +13,7 @@ module Csound.Dynamic.Build (
     prim, opcPrefix, oprPrefix, oprInfix, 
     numExp1, numExp2,
     tfm, tfmNoInlineArgs, pn, withInits,
-    double, int, str, verbatim,
+    double, int, str, verbatim, instrIdE,
 
     -- ** Opcodes constructors
     Spec1, spec1, opcs, opcsNoInlineArgs, opr1, opr1k, infOpr, oprBy,
@@ -77,6 +77,11 @@ int = prim . PrimInt
 verbatim :: Monad m => String -> DepT m ()
 verbatim = stmtOnlyT . Verbatim
 
+instrIdE :: InstrId -> E
+instrIdE x = case x of
+    InstrId Nothing  m -> int m
+    InstrId (Just _) _ -> error "instrId undefined for fractional InstrIds"
+    InstrLabel s -> str s
 ----------------------------------------------------------------------
 -- constructing opcodes
 
