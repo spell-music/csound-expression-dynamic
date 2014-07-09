@@ -1,5 +1,5 @@
 Name:          csound-expression-dynamic
-Version:       0.0.4
+Version:       0.0.5
 Cabal-Version: >= 1.6
 License:       BSD3
 License-file:  LICENSE
@@ -45,6 +45,7 @@ Library
 
   Other-Modules:
     Csound.Dynamic.Tfm.DeduceTypes
+    Csound.Dynamic.Tfm.Liveness
     Csound.Dynamic.Tfm.UnfoldMultiOuts
     Csound.Dynamic.Render.Pretty
     Csound.Dynamic.Render.Instr

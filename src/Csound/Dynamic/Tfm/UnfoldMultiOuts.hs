@@ -36,8 +36,8 @@ data UnfoldMultiOuts f a = UnfoldMultiOuts {
     getSelector    :: f (Var a) -> Maybe (Selector a),
     getParentTypes :: f (Var a) -> Maybe [a] }
 
-unfoldMultiOuts :: UnfoldMultiOuts f a -> Int -> [SingleStmt f a] -> [MultiStmt f a]
-unfoldMultiOuts algSpec lastFreshId stmts = evalState st lastFreshId
+unfoldMultiOuts :: UnfoldMultiOuts f a -> Int -> [SingleStmt f a] -> ([MultiStmt f a], Int)
+unfoldMultiOuts algSpec lastFreshId stmts = runState st lastFreshId
     where selectors = mapMaybe (\(lhs, rhs) -> fmap (lhs,) $ getSelector algSpec rhs) stmts
           st = mapM (unfoldStmt algSpec $ mkChildrenMap selectors) $ dropSelectors stmts
           dropSelectors = filter (isNothing . getSelector algSpec . snd)
