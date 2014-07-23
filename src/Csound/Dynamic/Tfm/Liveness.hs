@@ -153,5 +153,5 @@ initSt :: Int -> LivenessTable -> ST s (Registers s)
 initSt lastFreshId livenessTab = fmap (Registers initRegs livenessTab) (initSubstTable lastFreshId)
 
 initSubstTable :: Int ->  ST s (SubstTable s)
-initSubstTable n = A.newListArray (0, n) [0 .. n]
+initSubstTable n = A.newListArray (0, n+1) [0 .. n + 1]
 
