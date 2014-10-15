@@ -3,7 +3,9 @@
 -- | Boolean instances
 module Csound.Dynamic.Build.Logic(
     when1, whens,
-    ifBegin, ifEnd, elseBegin, elseIfBegin
+    ifBegin, ifEnd, elseBegin, elseIfBegin,
+    untilDo,
+    untilBegin, untilEnd
 ) where
 
 import Control.Monad.Trans.State(State, state, evalState)
@@ -45,6 +47,18 @@ elseBegin = stmtOnlyT ElseBegin
 
 ifEnd :: Monad m => DepT m ()
 ifEnd = stmtOnlyT IfEnd
+
+untilDo :: Monad m => E -> DepT m () -> DepT m ()
+untilDo p body = do
+    untilBegin p
+    body
+    untilEnd
+
+untilBegin :: Monad m => E -> DepT m ()
+untilBegin = withCond UntilBegin
+
+untilEnd :: Monad m => DepT m ()
+untilEnd = stmtOnlyT UntilEnd
 
 withCond :: Monad m => (CondInfo (PrimOr E) -> MainExp (PrimOr E)) -> E -> DepT m ()
 withCond stmt p = depT_ $ noRate $ stmt (condInfo p)

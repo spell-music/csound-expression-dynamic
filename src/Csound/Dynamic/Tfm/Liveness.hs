@@ -97,7 +97,7 @@ saveSubst from to = do
 
 substLhs :: Var -> Memory s Var
 substLhs v = do
-	v1 <- alloc $ varType v
+	v1 <- allocAndSkipInits v
 	saveSubst (varId v) (varId v1)
 	return v1
 
@@ -108,6 +108,14 @@ substRhs lineNum v = do
 	b <- isAlive lineNum v
 	unless b $ free v1
 	return v1
+
+allocAndSkipInits :: Var -> Memory s Var
+allocAndSkipInits v 
+    | isInit r  = return v
+    | otherwise = alloc r
+    where 
+        r = varType v
+        isInit x = x == Ir || x == Sr
 
 alloc :: Rate -> Memory s Var
 alloc rate = state $ \mem -> 

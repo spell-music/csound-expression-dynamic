@@ -135,6 +135,9 @@ data MainExp a
     | ElseIfBegin (CondInfo a)
     | ElseBegin
     | IfEnd
+    -- | looping constructions
+    | UntilBegin (CondInfo a)
+    | UntilEnd
     -- | Verbatim stmt
     | Verbatim String
     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)  

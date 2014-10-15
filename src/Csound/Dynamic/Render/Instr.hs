@@ -143,9 +143,11 @@ rateExp curRate expr = case expr of
     InitVar v a -> InitVar v $ rec1 Ir a -- rec1 (varRate v) a
     ExpPrim p -> ExpPrim p
     IfBegin _ -> rec2 condRate expr
+    UntilBegin _ -> rec2 condRate expr
     ElseIfBegin _ -> rec2 condRate expr
     ElseBegin -> ElseBegin
     IfEnd -> IfEnd
+    UntilEnd -> UntilEnd
     EmptyExp -> EmptyExp    
     Verbatim a -> Verbatim a
 
