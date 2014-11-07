@@ -1,8 +1,8 @@
 -- | Dependency tracking
 module Csound.Dynamic.Types.Dep(
-    DepT(..), runDepT, LocalHistory(..),    
+    DepT(..), LocalHistory(..), runDepT, execDepT, evalDepT,   
     -- * Dependencies
-    depT, depT_, mdepT, stripDepT, stmtOnlyT, execDepT,
+    depT, depT_, mdepT, stripDepT, stmtOnlyT, 
 
     -- * Variables
     newLocalVar, newLocalVars,
@@ -27,11 +27,12 @@ import Csound.Dynamic.Types.Exp
 newtype DepT m a = DepT { unDepT :: StateT LocalHistory m a }
 
 data LocalHistory = LocalHistory
-    { expDependency :: Maybe E
+    { expDependency :: E
+    , newLineNum    :: Int
     , newLocalVarId :: Int }
 
 instance Default LocalHistory where
-    def = LocalHistory Nothing 0
+    def = LocalHistory start 0 0
 
 instance Monad m => Functor (DepT m) where
     fmap = liftM 
@@ -46,19 +47,35 @@ instance Monad m => Monad (DepT m) where
 
 instance MonadTrans DepT where
     lift ma = DepT $ lift ma
-   
-runDepT :: DepT m a -> m (a, LocalHistory)
-runDepT a = runStateT (unDepT a) def
 
-execDepT :: Monad m => DepT m a -> m E
-execDepT a = liftM (maybe emptyE id . expDependency . snd) $ runDepT a
+runDepT :: (Functor m, Monad m) => DepT m a -> m (a, LocalHistory)
+runDepT a = runStateT (unDepT $ a) def
+
+evalDepT :: (Functor m, Monad m) => DepT m a -> m a
+evalDepT a = evalStateT (unDepT $ a) def
+   
+execDepT :: (Functor m, Monad m) => DepT m () -> m E
+execDepT a = fmap expDependency $ execStateT (unDepT $ a) def
 
 -- dependency tracking
 
+start :: E
+start = noRate Starts
+
+depends :: E -> E -> E
+depends a1 a2 = noRate $ Seq (toPrimOr a1) (toPrimOr a2)
+
+end :: Monad m => E -> DepT m ()
+end a = depT_ $ noRate $ Ends (toPrimOr a)
+
 depT :: Monad m => E -> DepT m E
-depT a = DepT $ StateT $ \s -> do
-    let x = Fix $ (unFix a) { ratedExpDepends = expDependency s }
-    return (x, s { expDependency = Just x })    
+depT a = DepT $ do
+    s <- get
+    let a1 = Fix $ (unFix a) { ratedExpDepends = Just (newLineNum s) }
+    put $ s { 
+        newLineNum = succ $ newLineNum s, 
+        expDependency = depends (expDependency s) a1 }
+    return a1    
 
 depT_ :: (Monad m) => E -> DepT m ()
 depT_ = fmap (const ()) . depT

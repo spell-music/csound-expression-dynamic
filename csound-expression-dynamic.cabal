@@ -42,7 +42,7 @@ Library
     Csound.Dynamic.Build.Logic
 
     Csound.Dynamic.Render
-
+  
   Other-Modules:
     Csound.Dynamic.Tfm.DeduceTypes
     Csound.Dynamic.Tfm.Liveness
@@ -50,5 +50,6 @@ Library
     Csound.Dynamic.Render.Pretty
     Csound.Dynamic.Render.Instr
      
+
 
 

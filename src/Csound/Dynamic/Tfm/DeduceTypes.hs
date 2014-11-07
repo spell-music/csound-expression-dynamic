@@ -95,7 +95,7 @@ deduceTypes spec as = runST $ do
     let typeMap = IM.fromList $ fmap lineType lines'
     lastId <- readSTRef freshIds
     return (reverse $ processLine typeMap =<< lines', lastId)
-    where n = length as
+    where n = succ $ if (null as) then 0 else (fst $ last as)
           processLine typeMap line = fmap (mkConvert spec) (lineConverts line) ++ [(a, fmap (lookupVar typeMap) b)]
               where (a, b) = lineStmt line            
 

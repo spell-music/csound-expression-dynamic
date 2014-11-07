@@ -27,6 +27,7 @@ import Data.Fix
 import qualified Csound.Dynamic.Tfm.DeduceTypes as R(Var(..)) 
 
 type Name = String
+type LineNum = Int
 
 -- | An instrument identifier
 data InstrId 
@@ -55,7 +56,7 @@ data RatedExp a = RatedExp
     { ratedExpRate      :: Maybe Rate       
         -- ^ Rate (can be undefined or Nothing, 
         -- it means that rate should be deduced automatically from the context)
-    , ratedExpDepends   :: Maybe a          
+    , ratedExpDepends   :: Maybe LineNum          
         -- ^ Dependency (it is used for expressions with side effects,
         -- value contains the privious statement)
     , ratedExpExp       :: Exp a    
@@ -140,6 +141,10 @@ data MainExp a
     | UntilEnd
     -- | Verbatim stmt
     | Verbatim String
+    -- | Dependency tracking
+    | Starts
+    | Seq a a
+    | Ends a
     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)  
 
 isEmptyExp :: E -> Bool

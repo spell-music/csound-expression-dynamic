@@ -1,6 +1,6 @@
 module Csound.Dynamic.Render.Instr(
     renderInstr, renderInstrBody
-) where
+) where 
 
 import Control.Arrow(second)
 import Control.Monad.Trans.State.Strict
@@ -27,14 +27,18 @@ renderInstr :: Instr -> Doc
 renderInstr a = ppInstr (instrName a) $ renderInstrBody (instrBody a)
 
 renderInstrBody :: E -> Doc
-renderInstrBody = P.vcat . flip evalState 0 
-    . mapM (uncurry ppStmt . clearEmptyResults) . collectRates . toDag 
+renderInstrBody a 
+  | null dag  = P.empty
+  | otherwise = render dag
+    where 
+      dag = toDag a
+      render = P.vcat . flip evalState 0 . mapM (uncurry ppStmt . clearEmptyResults) . collectRates 
 
 -------------------------------------------------------------
 -- E -> Dag
 
 toDag :: E -> Dag RatedExp 
-toDag expr = fromDag $ cse $ trimByArgLength expr
+toDag expr = filterDepCases $ fromDag $ cse $ trimByArgLength expr
 
 trimByArgLength :: E -> E
 trimByArgLength = cata $ \x -> Fix x{ ratedExpExp = phi $ ratedExpExp x }
@@ -57,6 +61,14 @@ collectRates dag = fmap (second ratedExpExp) res2
 
 -----------------------------------------------------------
 -- Dag -> Dag
+
+filterDepCases :: Dag RatedExp -> Dag RatedExp
+filterDepCases = filter (not . isDepCase . snd)
+  where isDepCase x = case ratedExpExp x of
+          Starts  -> True
+          Seq _ _ -> True
+          Ends _  -> True
+          _       -> False
 
 -----------------------------------------------------------
 -- deduces types
