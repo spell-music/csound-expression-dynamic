@@ -9,7 +9,7 @@ import qualified Data.Map as M
 
 import Data.Maybe(fromJust)
 import Data.Fix(Fix(..), cata)
-import Data.Fix.Cse(fromDag, cse)
+import Data.Fix.Cse(fromDag, cseFramed, FrameInfo(..))
 
 import qualified Text.PrettyPrint.Leijen as P
 
@@ -38,7 +38,20 @@ renderInstrBody a
 -- E -> Dag
 
 toDag :: E -> Dag RatedExp 
-toDag expr = filterDepCases $ fromDag $ cse $ trimByArgLength expr
+toDag expr = filterDepCases $ fromDag $ cseFramed getFrameInfo $ trimByArgLength expr
+
+getFrameInfo :: RatedExp a -> FrameInfo
+getFrameInfo x = case ratedExpExp x of
+    -- | Imperative If-then-else
+    IfBegin _     -> StartFrame
+    ElseIfBegin _ -> NextFrame
+    ElseBegin     -> NextFrame 
+    IfEnd         -> StopFrame
+    -- | looping constructions
+    UntilBegin _ -> StartFrame
+    UntilEnd     -> StopFrame
+    _            -> NoFrame
+
 
 trimByArgLength :: E -> E
 trimByArgLength = cata $ \x -> Fix x{ ratedExpExp = phi $ ratedExpExp x }
