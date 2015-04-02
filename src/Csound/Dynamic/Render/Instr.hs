@@ -42,12 +42,12 @@ toDag expr = filterDepCases $ fromDag $ cseFramed getFrameInfo $ trimByArgLength
 
 getFrameInfo :: RatedExp a -> FrameInfo
 getFrameInfo x = case ratedExpExp x of
-    -- | Imperative If-then-else
+    -- Imperative If-then-else
     IfBegin _     -> StartFrame
     ElseIfBegin _ -> NextFrame
     ElseBegin     -> NextFrame 
     IfEnd         -> StopFrame
-    -- | looping constructions
+    -- looping constructions
     UntilBegin _ -> StartFrame
     UntilEnd     -> StopFrame
     _            -> NoFrame
