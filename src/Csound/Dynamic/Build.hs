@@ -20,7 +20,7 @@ module Csound.Dynamic.Build (
     Specs, specs, MultiOut, mopcs, mo, 
 
     -- * Global init statements
-    setSr, setKsmps, setNchnls, setKr, setZeroDbfs
+    setSr, setKsmps, setNchnls, setNchnls_i, setKr, setZeroDbfs
 ) where
 
 import qualified Data.Map as M(fromList)
@@ -173,13 +173,14 @@ onExp f x = case unFix x of
 ----------------------------------------------------------------
 -- global inits
 
-setSr, setKsmps, setNchnls, setKr :: Monad m => Int -> DepT m ()
+setSr, setKsmps, setNchnls, setNchnls_i, setKr :: Monad m => Int -> DepT m ()
     
 setZeroDbfs :: Monad m => Double -> DepT m  ()
 
 setSr       = gInit "sr"
 setKr       = gInit "kr"
 setNchnls   = gInit "nchnls"
+setNchnls_i = gInit "nchnls_i"
 setKsmps    = gInit "ksmps"
 setZeroDbfs = gInitDouble "0dbfs"
 
