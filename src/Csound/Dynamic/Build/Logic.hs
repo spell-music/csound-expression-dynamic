@@ -3,7 +3,7 @@
 -- | Boolean instances
 module Csound.Dynamic.Build.Logic(
     when1, whens,
-    ifBegin, ifEnd, elseBegin, elseIfBegin,
+    ifBegin, ifEnd, elseBegin,
     untilDo,
     untilBegin, untilEnd
 ) where
@@ -33,14 +33,11 @@ whens bodies el = case bodies of
         elseIfs as
         elseBegin 
         el
-        ifEnd
-    where elseIfs = mapM_ (\(p, body) -> elseIfBegin p >> body)
+        foldl1 (>>) $ replicate (1 + length as) ifEnd
+    where elseIfs = mapM_ (\(p, body) -> elseBegin >> ifBegin p >> body)
 
 ifBegin :: Monad m => E -> DepT m ()
 ifBegin = withCond IfBegin
-
-elseIfBegin :: Monad m => E -> DepT m ()
-elseIfBegin = withCond ElseIfBegin
 
 elseBegin :: Monad m => DepT m ()
 elseBegin = stmtOnlyT ElseBegin

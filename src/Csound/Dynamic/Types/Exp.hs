@@ -3,7 +3,7 @@
 module Csound.Dynamic.Types.Exp(
     E, RatedExp(..), isEmptyExp, RatedVar, ratedVar, ratedVarRate, ratedVarId, 
     ratedExp, noRate, withRate, setRate,
-    Exp, toPrimOr, PrimOr(..), MainExp(..), Name, 
+    Exp, toPrimOr, toPrimOrTfm, PrimOr(..), MainExp(..), Name, 
     InstrId(..), intInstrId, ratioInstrId, stringInstrId,
     VarType(..), Var(..), Info(..), OpcFixity(..), Rate(..), 
     Signature(..), isInfix, isPrefix,    
@@ -102,10 +102,23 @@ newtype PrimOr a = PrimOr { unPrimOr :: Either Prim a }
 toPrimOr :: E -> PrimOr E
 toPrimOr a = PrimOr $ case ratedExpExp $ unFix a of
     ExpPrim (PString _) -> Right a
-    ExpPrim p -> Left p
+    ExpPrim p  -> Left p
     ReadVar v | noDeps -> Left (PrimVar (varRate v) v)
     _         -> Right a
-    where noDeps = isNothing $ ratedExpDepends $ unFix a
+    where 
+        noDeps = isNothing $ ratedExpDepends $ unFix a
+
+-- | Constructs PrimOr values from the expressions. It does inlining in
+-- case of primitive values.
+toPrimOrTfm :: Rate -> E -> PrimOr E
+toPrimOrTfm r a = PrimOr $ case ratedExpExp $ unFix a of
+    ExpPrim (PString _) -> Right a
+    ExpPrim p | (r == Ir || r == Sr) -> Left p
+    ReadVar v | noDeps -> Left (PrimVar (varRate v) v)
+    _         -> Right a
+    where 
+        noDeps = isNothing $ ratedExpDepends $ unFix a
+
 
 -- Expressions with inlining.
 type Exp a = MainExp (PrimOr a)
@@ -133,7 +146,7 @@ data MainExp a
     | WriteVar Var a    
     -- | Imperative If-then-else
     | IfBegin (CondInfo a)
-    | ElseIfBegin (CondInfo a)
+--  | ElseIfBegin (CondInfo a) -- It's expressed with nested if-else
     | ElseBegin
     | IfEnd
     -- | looping constructions

@@ -44,7 +44,7 @@ getFrameInfo :: RatedExp a -> FrameInfo
 getFrameInfo x = case ratedExpExp x of
     -- Imperative If-then-else
     IfBegin _     -> StartFrame
-    ElseIfBegin _ -> NextFrame
+--     ElseIfBegin _ -> NextFrame
     ElseBegin     -> NextFrame 
     IfEnd         -> StopFrame
     -- looping constructions
@@ -169,7 +169,7 @@ rateExp curRate expr = case expr of
     ExpPrim p -> ExpPrim p
     IfBegin _ -> rec2 condRate expr
     UntilBegin _ -> rec2 condRate expr
-    ElseIfBegin _ -> rec2 condRate expr
+--    ElseIfBegin _ -> rec2 condRate expr
     ElseBegin -> ElseBegin
     IfEnd -> IfEnd
     UntilEnd -> UntilEnd

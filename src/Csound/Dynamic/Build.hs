@@ -23,8 +23,9 @@ module Csound.Dynamic.Build (
     setSr, setKsmps, setNchnls, setNchnls_i, setKr, setZeroDbfs
 ) where
 
-import qualified Data.Map as M(fromList)
+import qualified Data.Map as M(fromList, toList)
 
+import Data.List(transpose)
 import Data.Fix(Fix(..))
 
 import Csound.Dynamic.Types
@@ -45,7 +46,14 @@ oprInfix :: Name -> Signature -> Info
 oprInfix name signature = Info name signature Infix
 
 tfm :: Info -> [E] -> E
-tfm info args = noRate $ Tfm info $ fmap toPrimOr args
+tfm info args = noRate $ Tfm info $ zipWith toPrimOrTfm (getInfoRates info) args
+
+getInfoRates :: Info -> [Rate]
+getInfoRates a = getInRates $ infoSignature a
+    where
+        getInRates x = case x of
+            SingleRate m    -> fmap minimum $ transpose $ fmap snd $ M.toList m
+            MultiRate _ ins -> ins
 
 tfmNoInlineArgs :: Info -> [E] -> E
 tfmNoInlineArgs info args = noRate $ Tfm info $ fmap (PrimOr . Right) args
@@ -177,12 +185,15 @@ setSr, setKsmps, setNchnls, setNchnls_i, setKr :: Monad m => Int -> DepT m ()
     
 setZeroDbfs :: Monad m => Double -> DepT m  ()
 
-setSr       = gInit "sr"
-setKr       = gInit "kr"
-setNchnls   = gInit "nchnls"
-setNchnls_i = gInit "nchnls_i"
-setKsmps    = gInit "ksmps"
-setZeroDbfs = gInitDouble "0dbfs"
+setGlobal :: (Monad m, Show a) => String -> a -> DepT m  ()
+setGlobal name val = verbatim $ name ++ " = " ++ show val
+
+setSr       = setGlobal "sr"
+setKr       = setGlobal "kr"
+setNchnls   = setGlobal "nchnls"
+setNchnls_i = setGlobal "nchnls_i"
+setKsmps    = setGlobal "ksmps"
+setZeroDbfs = setGlobal "0dbfs"
 
 gInit :: Monad m => String -> Int -> DepT m ()
 gInit name val = writeVar (VarVerbatim Ir name) (int val)
