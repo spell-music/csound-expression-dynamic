@@ -54,7 +54,7 @@ instance Floating E where
     exp = unOpt exp (opr1 "exp")
     sqrt = unOpt sqrt (opr1 "sqrt")
     log = unOpt log (opr1 "log")
-    logBase a n = case n of
+    logBase n a = case n of
         2 -> unOpt (flip logBase 2) (opr1 "logbtwo") a
         10 -> unOpt (flip logBase 10) (opr1 "log10") a
         b -> log a / log b
