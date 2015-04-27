@@ -7,7 +7,7 @@ module Csound.Dynamic.Build.Numeric(
 
 import Data.Monoid
 
-import Csound.Dynamic.Types
+import Csound.Dynamic.Types.Exp
 import Csound.Dynamic.Build(toExp, prim, opr1, numExp1)
 
 ---------------------------------------------

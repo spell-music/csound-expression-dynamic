@@ -8,7 +8,6 @@ import Data.Char(toLower)
 import qualified Data.IntMap as IM
 
 import Text.PrettyPrint.Leijen
-
 import Csound.Dynamic.Types
 
 vcatSep :: [Doc] -> Doc
@@ -41,10 +40,10 @@ tag name content = vcatSep [
     content, 
     text "</" <> text name <> char '>']  
 
-ppNotes :: InstrId -> [CsdEvent Note] -> Doc
+ppNotes :: InstrId -> [CsdEvent] -> Doc
 ppNotes instrId = vcat . fmap (ppNote instrId)
 
-ppNote :: InstrId -> CsdEvent Note -> Doc
+ppNote :: InstrId -> CsdEvent -> Doc
 ppNote instrId evt = char 'i' 
     <+> ppInstrId instrId 
     <+> double (csdEventStart evt) <+> double (csdEventDur evt) 

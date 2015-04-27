@@ -1,9 +1,11 @@
 -- | The Csound file
 module Csound.Dynamic.Types.CsdFile(            
     Csd(..), Flags, Orc(..), Sco(..), Instr(..), InstrBody,
+    CsdEvent, csdEventStart, csdEventDur, csdEventContent, csdEventTotalDur,
     intInstr, alwaysOn
 ) where
 
+import Csound.Dynamic.Build.Numeric
 import Csound.Dynamic.Types.Exp
 import Csound.Dynamic.Types.Flags
 import Csound.Dynamic.Types.EventList
@@ -29,7 +31,7 @@ data Instr = Instr
 data Sco = Sco 
     { scoTotalDur   :: Maybe Double
     , scoGens       :: [(Int, Gen)]
-    , scoNotes      :: [(InstrId, [CsdEvent Note])]  }
+    , scoNotes      :: [(InstrId, [CsdEvent])]  }
 
 ----------------------------------------------------------------
 -- instruments
@@ -40,6 +42,22 @@ intInstr n expr = Instr (intInstrId n) expr
 ----------------------------------------------------------------
 -- score
 
-alwaysOn :: InstrId -> (InstrId, [CsdEvent Note])
+alwaysOn :: InstrId -> (InstrId, [CsdEvent])
 alwaysOn instrId = (instrId, [(0, -1, [])])
 
+
+-- | The Csound note. It's a triple of
+--
+-- > (startTime, duration, parameters)
+type CsdEvent = (Double, Double, Note)
+
+csdEventStart   :: CsdEvent -> Double
+csdEventDur     :: CsdEvent -> Double
+csdEventContent :: CsdEvent -> Note
+
+csdEventStart   (a, _, _) = a
+csdEventDur     (_, a, _) = a
+csdEventContent (_, _, a) = a
+
+csdEventTotalDur :: CsdEvent -> Double
+csdEventTotalDur (start, dur, _) = start + dur

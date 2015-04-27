@@ -126,7 +126,16 @@ boolOp0 :: CondOp -> E
 boolOp2 :: CondOp -> E -> E -> E
 
 boolOp0 op = boolOps op []
+
 boolOp2 op a b = boolOps op [a, b]
+
+fromBoolOpt :: Either Bool E -> E
+fromBoolOpt = either (\x -> if x then true else false) id 
+
+toNumOpt :: E -> Either Double E
+toNumOpt x = case toExp x of
+    ExpPrim (PrimDouble d) -> Left d
+    _ -> Right x
 
 -----------------------------------------------------------------------------
 -- no support for not in csound so we perform not-elimination

@@ -28,7 +28,8 @@ import qualified Data.Map as M(fromList, toList)
 import Data.List(transpose)
 import Data.Fix(Fix(..))
 
-import Csound.Dynamic.Types
+import Csound.Dynamic.Types.Exp
+import Csound.Dynamic.Types.Dep
 
 ------------------------------------------------
 -- basic constructors

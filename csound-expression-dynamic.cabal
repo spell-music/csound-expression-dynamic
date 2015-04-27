@@ -1,5 +1,5 @@
 Name:          csound-expression-dynamic
-Version:       0.1.4
+Version:       0.1.4.1
 Cabal-Version: >= 1.6
 License:       BSD3
 License-file:  LICENSE
@@ -34,8 +34,7 @@ Library
     Csound.Dynamic.Types.Exp
     Csound.Dynamic.Types.Dep
     Csound.Dynamic.Types.CsdFile
-    Csound.Dynamic.Types.Flags
-    Csound.Dynamic.Types.EventList
+    Csound.Dynamic.Types.Flags    
 
     Csound.Dynamic.Build
     Csound.Dynamic.Build.Numeric
