@@ -8,7 +8,6 @@ module Csound.Dynamic.Types.CsdFile(
 import Csound.Dynamic.Build.Numeric
 import Csound.Dynamic.Types.Exp
 import Csound.Dynamic.Types.Flags
-import Csound.Dynamic.Types.EventList
 
 data Csd = Csd
     { csdFlags  :: Flags
