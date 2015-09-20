@@ -1,5 +1,8 @@
 -- | Main types
-{-# Language DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# Language 
+        DeriveFunctor, DeriveFoldable, DeriveTraversable, 
+        DeriveGeneric, 
+        TypeSynonymInstances, FlexibleInstances #-}
 module Csound.Dynamic.Types.Exp(
     E, RatedExp(..), isEmptyExp, RatedVar, ratedVar, ratedVarRate, ratedVarId, 
     ratedExp, noRate, withRate, setRate,
@@ -16,8 +19,11 @@ module Csound.Dynamic.Types.Exp(
 
 import Control.Applicative
 
+import GHC.Generics (Generic)
 import Data.Traversable
 import Data.Foldable hiding (concat)
+
+import Data.Hashable
 
 import Data.Map(Map)
 import Data.Maybe(isNothing)
@@ -35,7 +41,7 @@ data InstrId
     { instrIdFrac :: Maybe Int
     , instrIdCeil :: Int }
     | InstrLabel String 
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic)
     
 -- | Constructs an instrument id with the integer.
 intInstrId :: Int -> InstrId
@@ -51,6 +57,9 @@ stringInstrId = InstrLabel
 
 -- | The inner representation of csound expressions.
 type E = Fix RatedExp
+    
+instance Hashable E where
+    hashWithSalt s x = s `hashWithSalt` cata hash x
 
 data RatedExp a = RatedExp 
     { ratedExpRate      :: Maybe Rate       
@@ -61,7 +70,7 @@ data RatedExp a = RatedExp
         -- value contains the privious statement)
     , ratedExpExp       :: Exp a    
         -- ^ Main expression
-    } deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+    } deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)
 
 -- | RatedVar is for pretty printing of the wiring ports.
 type RatedVar = R.Var Rate
@@ -95,7 +104,7 @@ setRate r a = Fix $ (\x -> x { ratedExpRate = Just r }) $ unFix a
 -- | It's a primitive value or something else. It's used for inlining
 -- of the constants (primitive values).
 newtype PrimOr a = PrimOr { unPrimOr :: Either Prim a }
-    deriving (Show, Eq, Ord, Functor)
+    deriving (Show, Eq, Ord, Functor, Generic)
 
 -- | Constructs PrimOr values from the expressions. It does inlining in
 -- case of primitive values.
@@ -158,7 +167,7 @@ data MainExp a
     | Starts
     | Seq a a
     | Ends a
-    deriving (Show, Eq, Ord, Functor, Foldable, Traversable)  
+    deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)  
 
 isEmptyExp :: E -> Bool
 isEmptyExp e = isNothing (ratedExpDepends re) && (ratedExpExp re == EmptyExp)
@@ -173,11 +182,11 @@ data Var
     | VarVerbatim 
         { varRate :: Rate
         , varName :: Name        
-        } deriving (Show, Eq, Ord)       
+        } deriving (Show, Eq, Ord, Generic)       
         
 -- Variables can be global (then we have to prefix them with `g` in the rendering) or local.
 data VarType = LocalVar | GlobalVar
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic)
 
 -- Opcode information.
 data Info = Info 
@@ -187,7 +196,7 @@ data Info = Info
     , infoSignature     :: Signature
     -- Opcode can be infix or prefix
     , infoOpcFixity     :: OpcFixity
-    } deriving (Show, Eq, Ord)           
+    } deriving (Show, Eq, Ord, Generic)           
   
 isPrefix, isInfix :: Info -> Bool
 
@@ -196,7 +205,7 @@ isInfix  = (Infix  ==) . infoOpcFixity
  
 -- Opcode fixity
 data OpcFixity = Prefix | Infix | Opcode
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic)
 
 -- | The Csound rates.
 data Rate   -- rate:
@@ -209,7 +218,7 @@ data Rate   -- rate:
     | Fr    -- spectrum (for pvs opcodes)
     | Wr    -- special spectrum 
     | Tvar  -- I don't understand what it is (fix me) used with Fr
-    deriving (Show, Eq, Ord, Enum, Bounded)
+    deriving (Show, Eq, Ord, Enum, Bounded, Generic)
     
 -- Opcode type signature. Opcodes can produce single output (SingleRate) or multiple outputs (MultiRate).
 -- In Csound opcodes are often have several signatures. That is one opcode name can produce signals of the 
@@ -226,6 +235,15 @@ data Signature
         , inMultiRate  :: [Rate] } 
     deriving (Show, Eq, Ord)
 
+instance Hashable Signature where
+    hashWithSalt s x = case x of
+        SingleRate m -> s `hashWithSalt` (0 :: Int) `hashWithSalt` (hash $ fmap (\b -> (take 5 b)) $ head' $ toList m)
+        MultiRate a b -> s `hashWithSalt` (1 :: Int) `hashWithSalt` (hash $ take 5 a) `hashWithSalt` (hash $ take 5 b)
+        where 
+            head' xs = case xs of
+                [] -> Nothing
+                x:_ -> Just x
+
 -- Primitive values
 data Prim 
     -- instrument p-arguments
@@ -238,7 +256,7 @@ data Prim
     | PrimVar 
         { primVarTargetRate :: Rate 
         , primVar           :: Var }
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic)
 
 -- Gen routine.
 data Gen = Gen 
@@ -246,7 +264,7 @@ data Gen = Gen
     , genId      :: Int
     , genArgs    :: [Double]
     , genFile    :: Maybe String
-    } deriving (Show, Eq, Ord)
+    } deriving (Show, Eq, Ord, Generic)
 
 -- Csound note
 type Note = [Prim]
@@ -259,15 +277,18 @@ data Inline a b = Inline
     , inlineEnv :: IM.IntMap b    
     } deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
+instance (Hashable a, Hashable b) => Hashable (Inline a b) where
+    hashWithSalt s (Inline a m) = s `hashWithSalt` (hash a) `hashWithSalt` (hash $ IM.toList m) 
+
 -- Inlined expression. 
 data InlineExp a
     = InlinePrim Int
     | InlineExp a [InlineExp a]
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic)
 
 -- Expression as a tree (to be inlined)
 data PreInline a b = PreInline a [b]
-    deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+    deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)
 
 -- booleans
 
@@ -278,7 +299,7 @@ type CondInfo a = Inline CondOp a
 data CondOp  
     = TrueOp | FalseOp | And | Or
     | Equals | NotEquals | Less | Greater | LessEquals | GreaterEquals
-    deriving (Show, Eq, Ord)    
+    deriving (Show, Eq, Ord, Generic)    
 
 isTrue, isFalse :: CondInfo a -> Bool
 
@@ -298,7 +319,7 @@ getCondInfoOp x = case inlineExp x of
 type NumExp a = PreInline NumOp a
 
 data NumOp = Add | Sub | Neg | Mul | Div | Pow | Mod 
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic)
 
 -------------------------------------------------------
 -- instances for cse that ghc was not able to derive for me
@@ -315,6 +336,51 @@ instance Traversable PrimOr where
 -- | Multiple output. Specify the number of outputs to get the result.
 type MultiOut a = Int -> a
 
+
+------------------------------------------------------
+-- hashable instances
+
+instance (Hashable a, Hashable b) => Hashable (PreInline a b)
+instance (Hashable a) => Hashable (InlineExp a)
+instance Hashable CondOp
+instance Hashable NumOp
+
+instance Hashable Gen
+instance Hashable Prim
+instance Hashable Rate
+
+instance Hashable OpcFixity
+instance Hashable Info
+instance Hashable VarType
+instance Hashable Var
+
+instance Hashable a => Hashable (MainExp a)
+instance Hashable a => Hashable (PrimOr a)
+instance Hashable a => Hashable (RatedExp a)
+instance Hashable InstrId
+
+{-
+instance Hashable
+instance Hashable
+instance Hashable
+instance Hashable
+
+instance Hashable
+instance Hashable
+instance Hashable
+instance Hashable
+
+instance Hashable
+instance Hashable
+instance Hashable
+instance Hashable
+
+instance Hashable
+instance Hashable
+instance Hashable
+instance Hashable
+-}
+
 --------------------------------------------------------------
 -- comments
 -- 
@@ -323,4 +389,6 @@ type MultiOut a = Int -> a
 --    separate p-param for strings (we need it to read strings from global table) 
 --    Csound doesn't permits us to use more than four string params so we need to
 --    keep strings in the global table and use `strget` to read them
+
+
 
