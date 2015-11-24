@@ -85,9 +85,15 @@ ppGen tabId ft = char 'f'
 
 ppInstr :: InstrId -> Doc -> Doc
 ppInstr instrId body = vcat [
-    text "instr" <+> ppInstrId instrId,
+    text "instr" <+> ppInstrHeadId instrId,
     body,
     text "endin"]
+
+ppInstrHeadId :: InstrId -> Doc
+ppInstrHeadId x = case x of
+    InstrId den nom -> int nom <> maybe empty ppAfterDot den 
+    InstrLabel name -> text name
+    where ppAfterDot a = text $ ('.': ) $ reverse $ show a
 
 ppInstrId :: InstrId -> Doc
 ppInstrId x = case x of
