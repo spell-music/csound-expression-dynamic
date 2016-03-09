@@ -79,9 +79,14 @@ ppGen tabId ft = char 'f'
     <>  int tabId 
     <+> int 0 
     <+> (int $ genSize ft)
-    <+> (int $ genId ft) 
+    <+> (ppGenId $ genId ft) 
     <+> (maybe empty (text . show) $ genFile ft)
     <+> (hsep $ map double $ genArgs ft)
+
+ppGenId :: GenId -> Doc
+ppGenId genId = case genId of
+    IntGenId a      -> int a
+    StringGenId a   -> dquotes $ text a
 
 ppInstr :: InstrId -> Doc -> Doc
 ppInstr instrId body = vcat [

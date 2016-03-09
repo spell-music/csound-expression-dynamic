@@ -10,7 +10,7 @@ module Csound.Dynamic.Types.Exp(
     InstrId(..), intInstrId, ratioInstrId, stringInstrId,
     VarType(..), Var(..), Info(..), OpcFixity(..), Rate(..), 
     Signature(..), isInfix, isPrefix,    
-    Prim(..), Gen(..),  
+    Prim(..), Gen(..), GenId(..),
     Inline(..), InlineExp(..), PreInline(..),
     BoolExp, CondInfo, CondOp(..), isTrue, isFalse,    
     NumExp, NumOp(..), Note,    
@@ -261,10 +261,13 @@ data Prim
 -- Gen routine.
 data Gen = Gen 
     { genSize    :: Int
-    , genId      :: Int
+    , genId      :: GenId
     , genArgs    :: [Double]
     , genFile    :: Maybe String
     } deriving (Show, Eq, Ord, Generic)
+
+data GenId = IntGenId Int | StringGenId String
+    deriving (Show, Eq, Ord, Generic)
 
 -- Csound note
 type Note = [Prim]
@@ -346,6 +349,7 @@ instance Hashable CondOp
 instance Hashable NumOp
 
 instance Hashable Gen
+instance Hashable GenId
 instance Hashable Prim
 instance Hashable Rate
 
