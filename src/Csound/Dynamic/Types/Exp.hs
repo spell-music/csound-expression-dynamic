@@ -248,7 +248,7 @@ instance Hashable Signature where
 data Prim 
     -- instrument p-arguments
     = P Int 
-    | PString Int       -- >> p-string: 
+    | PString Int       -- >> p-string (read p-string notes at the bottom of the file): 
     | PrimInt Int 
     | PrimDouble Double 
     | PrimString String 
@@ -362,28 +362,6 @@ instance Hashable a => Hashable (MainExp a)
 instance Hashable a => Hashable (PrimOr a)
 instance Hashable a => Hashable (RatedExp a)
 instance Hashable InstrId
-
-{-
-instance Hashable
-instance Hashable
-instance Hashable
-instance Hashable
-
-instance Hashable
-instance Hashable
-instance Hashable
-instance Hashable
-
-instance Hashable
-instance Hashable
-instance Hashable
-instance Hashable
-
-instance Hashable
-instance Hashable
-instance Hashable
-instance Hashable
--}
 
 --------------------------------------------------------------
 -- comments
