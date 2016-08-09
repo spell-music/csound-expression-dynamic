@@ -1,6 +1,6 @@
 -- | The Csound file
 module Csound.Dynamic.Types.CsdFile(            
-    Csd(..), Flags, Orc(..), Sco(..), Instr(..), InstrBody,
+    Csd(..), Flags, Orc(..), Sco(..), Plugin(..), Instr(..), InstrBody,
     CsdEvent, csdEventStart, csdEventDur, csdEventContent, csdEventTotalDur,
     intInstr, alwaysOn
 ) where
@@ -10,9 +10,10 @@ import Csound.Dynamic.Types.Exp
 import Csound.Dynamic.Types.Flags
 
 data Csd = Csd
-    { csdFlags  :: Flags
-    , csdOrc    :: Orc
-    , csdSco    :: Sco
+    { csdFlags   :: Flags
+    , csdOrc     :: Orc
+    , csdSco     :: Sco
+    , csdPlugins :: [Plugin]
     } 
 
 data Orc = Orc
@@ -31,6 +32,11 @@ data Sco = Sco
     { scoTotalDur   :: Maybe Double
     , scoGens       :: [(Int, Gen)]
     , scoNotes      :: [(InstrId, [CsdEvent])]  }
+
+data Plugin = Plugin
+    { pluginName    :: String
+    , pluginContent :: String
+    }
 
 ----------------------------------------------------------------
 -- instruments

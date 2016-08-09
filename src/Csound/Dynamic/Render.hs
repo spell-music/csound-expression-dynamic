@@ -13,6 +13,7 @@ renderCsd a = show $ ppCsdFile
     (renderFlags $ csdFlags a)
     (renderOrc $ csdOrc a)
     (renderSco   $ csdSco a)
+    (csdPlugins a)
 
 renderFlags :: Flags -> Doc
 renderFlags = P.pretty

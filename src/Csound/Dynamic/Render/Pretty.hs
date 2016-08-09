@@ -27,12 +27,17 @@ unary op a = parens $ text op <> a
 func :: String -> Doc -> Doc
 func op a = text op <> parens a
 
-ppCsdFile :: Doc -> Doc -> Doc -> Doc
-ppCsdFile flags orc sco = 
+ppCsdFile :: Doc -> Doc -> Doc -> [Plugin] -> Doc
+ppCsdFile flags orc sco plugins = 
     tag "CsoundSynthesizer" $ vcatSep [
         tag "CsOptions" flags,
         tag "CsInstruments" orc,
-        tag "CsScore" sco]    
+        tag "CsScore" sco,
+        ppPlugins plugins
+        ]   
+
+ppPlugins :: [Plugin] -> Doc
+ppPlugins plugins = vcatSep $ fmap (\(Plugin name body) -> tag name (text body)) plugins
 
 tag :: String -> Doc -> Doc
 tag name content = vcatSep [
