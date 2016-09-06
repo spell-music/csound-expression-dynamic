@@ -130,7 +130,7 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     InitVar v a                     -> tab $ ppOpc (ppVar v) "init" [a]
     ReadVar v                       -> tab $ res $= ppVar v
 
-    IfBegin a                       -> succTab          $ text "if "     <> ppCond a <> text " then"
+    IfBegin _ a                     -> succTab          $ text "if "     <> ppCond a <> text " then"
 --     ElseIfBegin a                   -> left >> (succTab $ text "elseif " <> ppCond a <> text " then")    
     ElseBegin                       -> left >> (succTab $ text "else")
     IfEnd                           -> left >> (tab     $ text "endif")

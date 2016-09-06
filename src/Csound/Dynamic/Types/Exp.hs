@@ -154,7 +154,7 @@ data MainExp a
     | ReadVar Var
     | WriteVar Var a    
     -- | Imperative If-then-else
-    | IfBegin (CondInfo a)
+    | IfBegin Rate (CondInfo a)
 --  | ElseIfBegin (CondInfo a) -- It's expressed with nested if-else
     | ElseBegin
     | IfEnd

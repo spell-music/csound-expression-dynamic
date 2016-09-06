@@ -43,7 +43,7 @@ toDag expr = filterDepCases $ fromDag $ cseFramed getFrameInfo $ trimByArgLength
 getFrameInfo :: RatedExp a -> FrameInfo
 getFrameInfo x = case ratedExpExp x of
     -- Imperative If-then-else
-    IfBegin _     -> StartFrame
+    IfBegin _ _   -> StartFrame
 --     ElseIfBegin _ -> NextFrame
     ElseBegin     -> NextFrame 
     IfEnd         -> StopFrame
@@ -167,7 +167,7 @@ rateExp curRate expr = case expr of
     WriteVar v a -> WriteVar v $ rec1 (varRate v) a
     InitVar v a -> InitVar v $ rec1 Ir a -- rec1 (varRate v) a
     ExpPrim p -> ExpPrim p
-    IfBegin _ -> rec2 condRate expr
+    IfBegin rootRate _ -> rec2 rootRate expr
     UntilBegin _ -> rec2 condRate expr
 --    ElseIfBegin _ -> rec2 condRate expr
     ElseBegin -> ElseBegin

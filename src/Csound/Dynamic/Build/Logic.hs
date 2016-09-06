@@ -18,26 +18,26 @@ import Csound.Dynamic.Build(onExp, toExp)
 ------------------------------------------------------
 -- imperative if-then-else
 
-when1 :: Monad m => E -> DepT m () -> DepT m ()
-when1 p body = do
-    ifBegin p
+when1 :: Monad m => Rate -> E -> DepT m () -> DepT m ()
+when1 rate p body = do
+    ifBegin rate p
     body
     ifEnd
 
-whens :: Monad m => [(E, DepT m ())] -> DepT m () -> DepT m ()
-whens bodies el = case bodies of
+whens :: Monad m => Rate -> [(E, DepT m ())] -> DepT m () -> DepT m ()
+whens rate bodies el = case bodies of
     []   -> el
     a:as -> do
-        ifBegin (fst a)
+        ifBegin rate (fst a)
         snd a
         elseIfs as
         elseBegin 
         el
         foldl1 (>>) $ replicate (1 + length as) ifEnd
-    where elseIfs = mapM_ (\(p, body) -> elseBegin >> ifBegin p >> body)
+    where elseIfs = mapM_ (\(p, body) -> elseBegin >> ifBegin rate p >> body)
 
-ifBegin :: Monad m => E -> DepT m ()
-ifBegin = withCond IfBegin
+ifBegin :: Monad m => Rate -> E -> DepT m ()
+ifBegin rate = withCond $ IfBegin rate
 
 elseBegin :: Monad m => DepT m ()
 elseBegin = stmtOnlyT ElseBegin
