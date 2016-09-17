@@ -194,7 +194,7 @@ instance Monoid MidiRT where
         , midiVelocityAmp   = midiVelocityAmp a <|> midiVelocityAmp b
         , midiOutDevice     = midiOutDevice a <|> midiOutDevice b }
 
-data Rtmidi = PortMidi | AlsaMidi | CoreMidi | MmeMidi | WinmmeMidi | VirtualMidi | NoRtmidi
+data Rtmidi = PortMidi | AlsaMidi | AlsaSeq | CoreMidi | MmeMidi | WinmmeMidi | VirtualMidi | NoRtmidi
 
 -- Display
 
@@ -413,6 +413,7 @@ instance Pretty Rtmidi where
         VirtualMidi -> "virtual"
         PortMidi    -> "PortMidi"
         AlsaMidi    -> "alsa"
+        AlsaSeq     -> "alsaseq"
         CoreMidi    -> "coremidi"
         MmeMidi     -> "mme"
         WinmmeMidi  -> "winmme"
