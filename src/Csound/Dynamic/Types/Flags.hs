@@ -374,7 +374,7 @@ instance Pretty Rtaudio where
         Jack name ins outs -> rt "jack" <+> jackFields name ins outs
         Mme -> rt "mme"
         Alsa  -> rt "alsa"
-        CoreAudio -> rt "CoreAudio"
+        CoreAudio -> rt "auhal"
         NoRtaudio   -> rt "0"
         where 
             rt = text . p3 "rtaudio"
