@@ -9,6 +9,7 @@ import qualified Data.IntMap as IM
 
 import Text.PrettyPrint.Leijen
 import Csound.Dynamic.Types
+import qualified Csound.Dynamic.Tfm.DeduceTypes as R(Var(..))
 
 vcatSep :: [Doc] -> Doc
 vcatSep = vcat . punctuate line
@@ -114,7 +115,17 @@ ppInstrId x = case x of
 type TabDepth = Int
 
 ppStmt :: [RatedVar] -> Exp RatedVar -> State TabDepth Doc
-ppStmt outs expr = ppExp (ppOuts outs) expr
+ppStmt outs expr = maybe (ppExp (ppOuts outs) expr) id (maybeStringCopy outs expr) 
+
+maybeStringCopy :: [RatedVar] -> Exp RatedVar -> Maybe (State TabDepth Doc)
+maybeStringCopy outs expr = case (outs, expr) of
+    ([R.Var n Sr], ExpPrim (PrimVar rate var)) -> Just $ tab $ ppStringCopy (ppOuts outs) (ppVar var)
+    ([R.Var n Sr], ReadVar var) -> Just $ tab $ ppStringCopy (ppOuts outs) (ppVar var)
+    ([], WriteVar outVar a) | varRate outVar == Sr  -> Just $ tab $ ppStringCopy (ppVar outVar) (ppPrimOrVar a)
+    _ -> Nothing
+
+ppStringCopy :: Doc -> Doc -> Doc
+ppStringCopy outs src = ppOpc outs "strcpyk" [src]
 
 ppExp :: Doc -> Exp RatedVar -> State TabDepth Doc
 ppExp res expr = case fmap ppPrimOrVar expr of
@@ -141,19 +152,21 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     EmptyExp                        -> return empty
     Verbatim str                    -> return $ text str
     x -> error $ "unknown expression: " ++ show x
-    where tab doc = fmap (shiftByTab doc) get 
-          tabWidth = 4
-          shiftByTab doc n
-            | n == 0    = doc
-            | otherwise = (text $ replicate (tabWidth * n) ' ') <> doc 
+          
+tab doc = fmap (shiftByTab doc) get 
+tabWidth = 4
+shiftByTab doc n
+    | n == 0    = doc
+    | otherwise = (text $ replicate (tabWidth * n) ' ') <> doc 
 
-          left = modify pred
-          succTab doc = do
-            a <- tab doc
-            modify succ
-            return a
+left = modify pred
 
-          prefix name args = text name <> tupled args
+succTab doc = do
+    a <- tab doc
+    modify succ
+    return a
+
+prefix name args = text name <> tupled args
 
 ppCond :: Inline CondOp Doc -> Doc
 ppCond = ppInline ppCondOp 
