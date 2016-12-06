@@ -14,6 +14,7 @@ module Csound.Dynamic.Build (
     numExp1, numExp2,
     tfm, tfmNoInlineArgs, pn, withInits,
     double, int, str, verbatim, instrIdE,
+    inlineVar,
 
     -- ** Opcodes constructors
     Spec1, spec1, opcs, opcsNoInlineArgs, opr1, opr1k, infOpr, oprBy,
@@ -58,6 +59,9 @@ getInfoRates a = getInRates $ infoSignature a
 
 tfmNoInlineArgs :: Info -> [E] -> E
 tfmNoInlineArgs info args = noRate $ Tfm info $ fmap (PrimOr . Right) args
+            
+inlineVar :: Var -> E        
+inlineVar = Fix . RatedExp Nothing Nothing . ReadVar
 
 pn :: Int -> E
 pn = prim . P

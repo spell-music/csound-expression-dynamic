@@ -50,6 +50,8 @@ getFrameInfo x = case ratedExpExp x of
     -- looping constructions
     UntilBegin _ -> StartFrame
     UntilEnd     -> StopFrame
+    WhileBegin _ -> StartFrame
+    WhileEnd     -> StopFrame    
     _            -> NoFrame
 
 
@@ -169,10 +171,12 @@ rateExp curRate expr = case expr of
     ExpPrim p -> ExpPrim p
     IfBegin rootRate _ -> rec2 rootRate expr
     UntilBegin _ -> rec2 condRate expr
+    WhileBegin _ -> rec2 condRate expr    
 --    ElseIfBegin _ -> rec2 condRate expr
     ElseBegin -> ElseBegin
     IfEnd -> IfEnd
     UntilEnd -> UntilEnd
+    WhileEnd -> WhileEnd
     EmptyExp -> EmptyExp    
     Verbatim a -> Verbatim a
 

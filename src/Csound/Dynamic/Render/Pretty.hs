@@ -136,6 +136,8 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     IfEnd                           -> left >> (tab     $ text "endif")
     UntilBegin a                    -> succTab          $ text "until " <> ppCond a <> text " do"
     UntilEnd                        -> left >> (tab     $ text "od")
+    WhileBegin a                    -> succTab          $ text "while " <> ppCond a <> text " do"
+    WhileEnd                        -> left >> (tab     $ text "od")
     EmptyExp                        -> return empty
     Verbatim str                    -> return $ text str
     x -> error $ "unknown expression: " ++ show x

@@ -5,7 +5,9 @@ module Csound.Dynamic.Build.Logic(
     when1, whens,
     ifBegin, ifEnd, elseBegin,
     untilDo,
-    untilBegin, untilEnd
+    untilBegin, untilEnd,
+    whileDo,
+    whileBegin, whileEnd
 ) where
 
 import Control.Monad.Trans.State(State, state, evalState)
@@ -56,6 +58,18 @@ untilBegin = withCond UntilBegin
 
 untilEnd :: Monad m => DepT m ()
 untilEnd = stmtOnlyT UntilEnd
+
+whileDo :: Monad m => E -> DepT m () -> DepT m ()
+whileDo p body = do
+    whileBegin p
+    body
+    whileEnd
+
+whileBegin :: Monad m => E -> DepT m ()
+whileBegin = withCond WhileBegin
+
+whileEnd :: Monad m => DepT m ()
+whileEnd = stmtOnlyT WhileEnd
 
 withCond :: Monad m => (CondInfo (PrimOr E) -> MainExp (PrimOr E)) -> E -> DepT m ()
 withCond stmt p = depT_ $ noRate $ stmt (condInfo p)

@@ -161,6 +161,8 @@ data MainExp a
     -- | looping constructions
     | UntilBegin (CondInfo a)
     | UntilEnd
+    | WhileBegin (CondInfo a)
+    | WhileEnd
     -- | Verbatim stmt
     | Verbatim String
     -- | Dependency tracking
