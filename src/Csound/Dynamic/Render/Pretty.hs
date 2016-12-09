@@ -122,6 +122,8 @@ maybeStringCopy outs expr = case (outs, expr) of
     ([R.Var n Sr], ExpPrim (PrimVar rate var)) -> Just $ tab $ ppStringCopy (ppOuts outs) (ppVar var)
     ([R.Var n Sr], ReadVar var) -> Just $ tab $ ppStringCopy (ppOuts outs) (ppVar var)
     ([], WriteVar outVar a) | varRate outVar == Sr  -> Just $ tab $ ppStringCopy (ppVar outVar) (ppPrimOrVar a)
+    ([R.Var n Sr], ReadArr var as) -> Just $ tab $ ppStringCopy (ppOuts outs) (ppReadArr var $ fmap ppPrimOrVar as)
+    ([], WriteArr outVar bs a) | varRate outVar == Sr -> Just $ tab $ ppStringCopy (ppArrIndex outVar $ fmap ppPrimOrVar bs) (ppPrimOrVar a)
     _ -> Nothing
 
 ppStringCopy :: Doc -> Doc -> Doc
@@ -142,7 +144,7 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     ReadVar v                       -> tab $ res $= ppVar v
 
     InitArr v as                    -> tab $ ppOpc (ppArrVar (length as) v) "init" as
-    ReadArr v as                    -> tab $ ppReadArr v as
+    ReadArr v as                    -> tab $ res $= ppReadArr v as
     WriteArr v as b                 -> tab $ ppWriteArr v as b
 
     IfBegin _ a                     -> succTab          $ text "if "     <> ppCond a <> text " then"
@@ -234,10 +236,6 @@ ppConvertRate out to from var = case (to, from) of
     (Kr, Ir) -> out $= k var
     (Ir, Ar) -> downsamp var
     (Ir, Kr) -> out $= i var
-    (Xr, Ar) -> var
-    (Xr, Kr) -> var
-    (Ar, Xr) -> var
-    (Kr, Xr) -> var
     (a, b)   -> error $ "bug: no rate conversion from " ++ show b ++ " to " ++ show a ++ "."
     where 
         upsamp x = ppOpc out "upsamp" [x]

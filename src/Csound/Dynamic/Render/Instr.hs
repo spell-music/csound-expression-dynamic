@@ -151,6 +151,7 @@ deduceRate desiredRates expr = case ratedExpExp expr of
         Xr -> Ar
         r  -> r
     ReadVar v -> varRate v
+    ReadArr v _ -> varRate v
     _  -> Xr    
     where tfmNoRate name rates tab = case sort rates of
               [Xr]  -> tfmNoRate name [Ar] tab                
