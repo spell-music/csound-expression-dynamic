@@ -234,6 +234,10 @@ ppConvertRate out to from var = case (to, from) of
     (Kr, Ir) -> out $= k var
     (Ir, Ar) -> downsamp var
     (Ir, Kr) -> out $= i var
+    (Xr, Ar) -> var
+    (Xr, Kr) -> var
+    (Ar, Xr) -> var
+    (Kr, Xr) -> var
     (a, b)   -> error $ "bug: no rate conversion from " ++ show b ++ " to " ++ show a ++ "."
     where 
         upsamp x = ppOpc out "upsamp" [x]
