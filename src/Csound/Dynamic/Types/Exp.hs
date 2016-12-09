@@ -152,7 +152,11 @@ data MainExp a
     -- | Reading/writing a named variable
     | InitVar Var a
     | ReadVar Var
-    | WriteVar Var a    
+    | WriteVar Var a  
+    -- | Arrays
+    | InitArr Var (ArrSize a)
+    | ReadArr Var (ArrIndex a)
+    | WriteArr Var (ArrIndex a) a
     -- | Imperative If-then-else
     | IfBegin Rate (CondInfo a)
 --  | ElseIfBegin (CondInfo a) -- It's expressed with nested if-else
@@ -170,6 +174,9 @@ data MainExp a
     | Seq a a
     | Ends a
     deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)  
+
+type ArrSize a = [a]
+type ArrIndex a = [a]
 
 isEmptyExp :: E -> Bool
 isEmptyExp e = isNothing (ratedExpDepends re) && (ratedExpExp re == EmptyExp)

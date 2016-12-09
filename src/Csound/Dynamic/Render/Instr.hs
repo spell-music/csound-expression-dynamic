@@ -165,9 +165,15 @@ rateExp curRate expr = case expr of
     Select rate pid a -> Select rate pid (fmap (ratedVar Xr) a)    
     If p t e -> If (rec2 condRate p) (rec1 curRate t) (rec1 curRate e) 
     ExpNum _ -> rec2 curRate expr    
+    
     ReadVar v -> ReadVar v
     WriteVar v a -> WriteVar v $ rec1 (varRate v) a
-    InitVar v a -> InitVar v $ rec1 Ir a -- rec1 (varRate v) a
+    InitVar v a -> InitVar v $ rec1 Ir a -- rec1 (varRate v) a    
+    
+    ReadArr v as -> ReadArr v $ arrIndex v as
+    WriteArr v as b -> WriteArr v (arrIndex v as) (rec1 (varRate v) b)
+    InitArr v as -> InitArr v $ fmap (rec1 Ir) as
+
     ExpPrim p -> ExpPrim p
     IfBegin rootRate _ -> rec2 rootRate expr
     UntilBegin _ -> rec2 condRate expr
@@ -192,8 +198,14 @@ rateExp curRate expr = case expr of
           rec2 r = fmap (fmap (ratedVar r))  
           rec1 r = fmap (ratedVar r)
 
+          arrIndex v as = fmap (rec1 (arrIndexVarRate v)) as
+
           msg txt = "Csound.Dynamic.Render.Instr.rateExp: " ++ txt 
-          
+         
+arrIndexVarRate v = case varRate v of    
+    Ir -> Ir
+    _  -> Kr
+
 mergeWithPrimOr :: [Rate] -> [PrimOr Int] -> [PrimOr (Var Rate)]
 mergeWithPrimOr = zipWith phi
     where 

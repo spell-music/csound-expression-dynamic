@@ -6,7 +6,11 @@ module Csound.Dynamic.Types.Dep(
 
     -- * Variables
     newLocalVar, newLocalVars,
-    writeVar, readVar, readOnlyVar, initVar, appendVarBy
+    writeVar, readVar, readOnlyVar, initVar, appendVarBy,
+
+    -- * Arrays
+    newLocalArrVar,
+    readArr, readOnlyArr, writeArr, initArr, appendArrBy
 ) where
 
 import Control.Applicative
@@ -133,4 +137,30 @@ initVar v x = depT_ $ setRate Ir $ noRate $ InitVar v $ toPrimOr x
 appendVarBy :: Monad m => (E -> E -> E) -> Var -> E -> DepT m ()
 appendVarBy op v x = writeVar v . op x =<< readVar v
 
+--------------------------------------------------
+-- arrays
 
+-- init
+
+newLocalArrVar :: Monad m => Rate -> m [E] -> DepT m Var
+newLocalArrVar rate val = do
+    var <- newVar rate
+    initArr var =<< lift val
+    return var
+
+-- ops
+
+readArr :: Monad m => Var -> [E] -> DepT m E
+readArr v ixs = depT $ noRate $ ReadArr v (fmap toPrimOr ixs)
+
+readOnlyArr :: Var -> [E] -> E
+readOnlyArr v ixs = noRate $ ReadArr v (fmap toPrimOr ixs)
+
+writeArr :: Monad m => Var -> [E] -> E -> DepT m ()
+writeArr v ixs a = depT_ $ noRate $ WriteArr v (fmap toPrimOr ixs) (toPrimOr a)
+
+initArr :: Monad m => Var -> [E] -> DepT m ()
+initArr v xs = depT_ $ noRate $ InitArr v $ fmap toPrimOr xs
+
+appendArrBy :: Monad m => (E -> E -> E) -> Var -> [E] -> E -> DepT m () 
+appendArrBy op v ixs x = writeArr v ixs . op x =<< readArr v ixs

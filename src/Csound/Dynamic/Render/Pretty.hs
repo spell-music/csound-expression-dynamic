@@ -141,6 +141,10 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     InitVar v a                     -> tab $ ppOpc (ppVar v) "init" [a]
     ReadVar v                       -> tab $ res $= ppVar v
 
+    InitArr v as                    -> tab $ ppOpc (ppArrVar (length as) v) "init" as
+    ReadArr v as                    -> tab $ ppReadArr v as
+    WriteArr v as b                 -> tab $ ppWriteArr v as b
+
     IfBegin _ a                     -> succTab          $ text "if "     <> ppCond a <> text " then"
 --     ElseIfBegin a                   -> left >> (succTab $ text "elseif " <> ppCond a <> text " then")    
     ElseBegin                       -> left >> (succTab $ text "else")
@@ -152,7 +156,16 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     EmptyExp                        -> return empty
     Verbatim str                    -> return $ text str
     x -> error $ "unknown expression: " ++ show x
-          
+ 
+-- pp arrays
+
+ppArrIndex v as = ppVar v <> (hcat $ fmap brackets as)
+ppArrVar n v = ppVar v <> (hcat $ replicate n $ text "[]")
+ppReadArr v as = ppArrIndex v as
+ppWriteArr v as b = ppArrIndex v as <+> equals <+> b
+
+-------------------------------------
+
 tab doc = fmap (shiftByTab doc) get 
 tabWidth = 4
 shiftByTab doc n

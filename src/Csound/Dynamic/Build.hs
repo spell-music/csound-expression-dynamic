@@ -182,7 +182,6 @@ onExp :: (Exp E -> Exp E) -> E -> E
 onExp f x = case unFix x of
     a -> Fix $ a{ ratedExpExp = f (ratedExpExp a) }
 
-
 ----------------------------------------------------------------
 -- global inits
 
