@@ -9,7 +9,7 @@ module Csound.Dynamic.Types.Dep(
     writeVar, readVar, readOnlyVar, initVar, appendVarBy,
 
     -- * Arrays
-    newLocalArrVar,
+    newLocalArrVar, newTmpArrVar,
     readArr, readOnlyArr, writeArr, initArr, appendArrBy
 ) where
 
@@ -147,6 +147,9 @@ newLocalArrVar rate val = do
     var <- newVar rate
     initArr var =<< lift val
     return var
+
+newTmpArrVar :: Monad m => Rate -> DepT m Var
+newTmpArrVar rate = newVar rate
 
 -- ops
 

@@ -21,7 +21,10 @@ module Csound.Dynamic.Build (
     Specs, specs, MultiOut, mopcs, mo, 
 
     -- * Global init statements
-    setSr, setKsmps, setNchnls, setNchnls_i, setKr, setZeroDbfs
+    setSr, setKsmps, setNchnls, setNchnls_i, setKr, setZeroDbfs,
+
+    -- * Arrays
+    opcsArr, infOprArr
 ) where
 
 import qualified Data.Map as M(fromList, toList)
@@ -49,6 +52,9 @@ oprInfix name signature = Info name signature Infix
 
 tfm :: Info -> [E] -> E
 tfm info args = noRate $ Tfm info $ zipWith toPrimOrTfm (getInfoRates info) args
+
+tfmArr :: Monad m => Var -> Info -> [E] -> DepT m ()
+tfmArr var info args = depT_ $ noRate $ TfmArr var info $ zipWith toPrimOrTfm (getInfoRates info) args
 
 getInfoRates :: Info -> [Rate]
 getInfoRates a = getInRates $ infoSignature a
@@ -129,6 +135,12 @@ numExp1 op x = noRate $ ExpNum $ fmap toPrimOr $ PreInline op [x]
 
 numExp2 :: NumOp -> E -> E -> E
 numExp2 op a b = noRate $ ExpNum $ fmap toPrimOr $ PreInline op [a, b]
+
+opcsArr :: Monad m => Var -> Name -> Spec1 -> [E] -> DepT m ()
+opcsArr out name signature = tfmArr out (opcPrefix name $ spec1 signature)
+
+infOprArr :: Monad m => Var -> Name -> E -> E -> DepT m ()
+infOprArr out name a b = tfmArr out (oprInfix name $ spec1 [(Ar, [Ar, Ar]), (Kr, [Kr, Kr]), (Ir, [Ir, Ir])]) [a, b]
 
 -- multiple output
 
