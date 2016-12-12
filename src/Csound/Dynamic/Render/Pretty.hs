@@ -146,6 +146,9 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     InitArr v as                    -> tab $ ppOpc (ppArrVar (length as) v) "init" as
     ReadArr v as                    -> tab $ res $= ppReadArr v as
     WriteArr v as b                 -> tab $ ppWriteArr v as b
+    TfmArr v op [a,b]| isInfix  op  -> tab $ ppTfmArrOut v <+> binary (infoName op) a b
+    TfmArr v op args | isPrefix op  -> tab $ ppTfmArrOut v <+> prefix (infoName op) args
+    TfmArr v op xs                  -> tab $ ppOpc (ppTfmArrOut v) (infoName op) xs
 
     IfBegin _ a                     -> succTab          $ text "if "     <> ppCond a <> text " then"
 --     ElseIfBegin a                   -> left >> (succTab $ text "elseif " <> ppCond a <> text " then")    
@@ -160,6 +163,8 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     x -> error $ "unknown expression: " ++ show x
  
 -- pp arrays
+
+ppTfmArrOut v = ppVar v <> text "[]"
 
 ppArrIndex v as = ppVar v <> (hcat $ fmap brackets as)
 ppArrVar n v = ppVar v <> (hcat $ replicate n $ text "[]")

@@ -157,6 +157,7 @@ data MainExp a
     | InitArr Var (ArrSize a)
     | ReadArr Var (ArrIndex a)
     | WriteArr Var (ArrIndex a) a
+    | TfmArr Var Info [a]
     -- | Imperative If-then-else
     | IfBegin Rate (CondInfo a)
 --  | ElseIfBegin (CondInfo a) -- It's expressed with nested if-else

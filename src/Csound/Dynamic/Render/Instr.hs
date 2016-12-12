@@ -172,8 +172,9 @@ rateExp curRate expr = case expr of
     InitVar v a -> InitVar v $ rec1 Ir a -- rec1 (varRate v) a    
     
     ReadArr v as -> ReadArr v $ arrIndex v as
-    WriteArr v as b -> WriteArr v (arrIndex v as) (rec1 (varRate v) b)
+    WriteArr v as b -> WriteArr v (arrIndex v as) (rec1 (varRate v) b)    
     InitArr v as -> InitArr v $ fmap (rec1 Ir) as
+    TfmArr v i xs -> TfmArr v i $ mergeWithPrimOr (ratesFromSignature curRate (infoSignature i)) xs
 
     ExpPrim p -> ExpPrim p
     IfBegin rootRate _ -> rec2 rootRate expr
