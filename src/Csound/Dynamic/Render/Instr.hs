@@ -139,7 +139,7 @@ deduceRate desiredRates expr = case ratedExpExp expr of
                     Just r | M.member r tab -> r
                     Just _ -> r1
                     Nothing -> r1
-    
+                        
     ExpNum _ -> case ratedExpRate expr of
         Just r  -> r
         Nothing -> case maximum (Ar : desiredRates) of
@@ -174,7 +174,7 @@ rateExp curRate expr = case expr of
     ReadArr v as -> ReadArr v $ arrIndex v as
     WriteArr v as b -> WriteArr v (arrIndex v as) (rec1 (varRate v) b)    
     InitArr v as -> InitArr v $ fmap (rec1 Ir) as
-    TfmArr v i xs -> TfmArr v i $ mergeWithPrimOr (ratesFromSignature curRate (infoSignature i)) xs
+    TfmArr isInit v i xs -> TfmArr isInit v i $ mergeWithPrimOr (ratesFromSignature curRate (infoSignature i)) xs
 
     ExpPrim p -> ExpPrim p
     IfBegin rootRate _ -> rec2 rootRate expr

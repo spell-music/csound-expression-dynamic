@@ -14,7 +14,8 @@ module Csound.Dynamic.Types.Exp(
     Inline(..), InlineExp(..), PreInline(..),
     BoolExp, CondInfo, CondOp(..), isTrue, isFalse,    
     NumExp, NumOp(..), Note,    
-    MultiOut
+    MultiOut,
+    IsArrInit, ArrSize, ArrIndex
 ) where
 
 import Control.Applicative
@@ -157,7 +158,7 @@ data MainExp a
     | InitArr Var (ArrSize a)
     | ReadArr Var (ArrIndex a)
     | WriteArr Var (ArrIndex a) a
-    | TfmArr Var Info [a]
+    | TfmArr IsArrInit Var Info [a]
     -- | Imperative If-then-else
     | IfBegin Rate (CondInfo a)
 --  | ElseIfBegin (CondInfo a) -- It's expressed with nested if-else
@@ -176,6 +177,7 @@ data MainExp a
     | Ends a
     deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)  
 
+type IsArrInit = Bool
 type ArrSize a = [a]
 type ArrIndex a = [a]
 
