@@ -173,6 +173,7 @@ rateExp curRate expr = case expr of
     
     ReadArr v as -> ReadArr v $ arrIndex v as
     WriteArr v as b -> WriteArr v (arrIndex v as) (rec1 (varRate v) b)    
+    WriteInitArr v as b -> WriteInitArr v (arrIndex v as) (rec1 Ir b)
     InitArr v as -> InitArr v $ fmap (rec1 Ir) as
     TfmArr isInit v i xs -> TfmArr isInit v i $ mergeWithPrimOr (ratesFromSignature curRate (infoSignature i)) xs
 

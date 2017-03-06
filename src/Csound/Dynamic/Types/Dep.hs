@@ -10,7 +10,7 @@ module Csound.Dynamic.Types.Dep(
 
     -- * Arrays
     newLocalArrVar, newTmpArrVar,
-    readArr, readOnlyArr, writeArr, initArr, appendArrBy
+    readArr, readOnlyArr, writeArr, writeInitArr, initArr, appendArrBy
 ) where
 
 import Control.Applicative
@@ -161,6 +161,9 @@ readOnlyArr v ixs = noRate $ ReadArr v (fmap toPrimOr ixs)
 
 writeArr :: Monad m => Var -> [E] -> E -> DepT m ()
 writeArr v ixs a = depT_ $ noRate $ WriteArr v (fmap toPrimOr ixs) (toPrimOr a)
+
+writeInitArr :: Monad m => Var -> [E] -> E -> DepT m ()
+writeInitArr v ixs a = depT_ $ noRate $ WriteInitArr v (fmap toPrimOr ixs) (toPrimOr a)
 
 initArr :: Monad m => Var -> [E] -> DepT m ()
 initArr v xs = depT_ $ noRate $ InitArr v $ fmap toPrimOr xs

@@ -155,9 +155,10 @@ data MainExp a
     | ReadVar Var
     | WriteVar Var a  
     -- | Arrays
-    | InitArr Var (ArrSize a)
+    | InitArr Var (ArrSize a)    
     | ReadArr Var (ArrIndex a)
     | WriteArr Var (ArrIndex a) a
+    | WriteInitArr Var (ArrIndex a) a
     | TfmArr IsArrInit Var Info [a]
     -- | Imperative If-then-else
     | IfBegin Rate (CondInfo a)

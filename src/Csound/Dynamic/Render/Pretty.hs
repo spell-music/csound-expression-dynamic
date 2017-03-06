@@ -146,6 +146,7 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     InitArr v as                    -> tab $ ppOpc (ppArrVar (length as) v) "init" as
     ReadArr v as                    -> tab $ res $= ppReadArr v as
     WriteArr v as b                 -> tab $ ppWriteArr v as b
+    WriteInitArr v as b             -> tab $ ppWriteInitArr v as b
     TfmArr isInit v op [a,b]| isInfix  op  -> tab $ ppTfmArrOut isInit v <+> binary (infoName op) a b
     TfmArr isInit v op args | isPrefix op  -> tab $ ppTfmArrOut isInit v <+> prefix (infoName op) args
     TfmArr isInit v op xs                  -> tab $ ppOpc (ppTfmArrOut isInit v) (infoName op) xs
@@ -170,6 +171,7 @@ ppArrIndex v as = ppVar v <> (hcat $ fmap brackets as)
 ppArrVar n v = ppVar v <> (hcat $ replicate n $ text "[]")
 ppReadArr v as = ppArrIndex v as
 ppWriteArr v as b = ppArrIndex v as <+> equals <+> b
+ppWriteInitArr v as b = ppArrIndex v as <+> text "init" <+> b
 
 -------------------------------------
 
