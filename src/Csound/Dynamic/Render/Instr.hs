@@ -51,6 +51,7 @@ getFrameInfo x = case ratedExpExp x of
     UntilBegin _ -> StartFrame
     UntilEnd     -> StopFrame
     WhileBegin _ -> StartFrame
+    WhileRefBegin _ -> StartFrame
     WhileEnd     -> StopFrame    
     _            -> NoFrame
 
@@ -181,11 +182,12 @@ rateExp curRate expr = case expr of
     IfBegin rootRate _ -> rec2 rootRate expr
     UntilBegin _ -> rec2 condRate expr
     WhileBegin _ -> rec2 condRate expr    
+    WhileRefBegin var -> WhileRefBegin var
 --    ElseIfBegin _ -> rec2 condRate expr
     ElseBegin -> ElseBegin
     IfEnd -> IfEnd
     UntilEnd -> UntilEnd
-    WhileEnd -> WhileEnd
+    WhileEnd -> WhileEnd    
     EmptyExp -> EmptyExp    
     Verbatim a -> Verbatim a
 

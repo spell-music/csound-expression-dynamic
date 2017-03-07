@@ -169,6 +169,7 @@ data MainExp a
     | UntilBegin (CondInfo a)
     | UntilEnd
     | WhileBegin (CondInfo a)
+    | WhileRefBegin Var
     | WhileEnd
     -- | Verbatim stmt
     | Verbatim String

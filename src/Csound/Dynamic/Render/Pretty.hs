@@ -158,6 +158,7 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     UntilBegin a                    -> succTab          $ text "until " <> ppCond a <> text " do"
     UntilEnd                        -> left >> (tab     $ text "od")
     WhileBegin a                    -> succTab          $ text "while " <> ppCond a <> text " do"
+    WhileRefBegin var               -> succTab          $ text "while " <> ppVar var <+> equals <+> text "1" <+> text "do"
     WhileEnd                        -> left >> (tab     $ text "od")
     EmptyExp                        -> return empty
     Verbatim str                    -> return $ text str
