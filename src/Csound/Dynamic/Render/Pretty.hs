@@ -144,7 +144,7 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     ReadVar v                       -> tab $ res $= ppVar v
 
     InitArr v as                    -> tab $ ppOpc (ppArrVar (length as) v) "init" as
-    ReadArr v as                    -> tab $ res $= ppReadArr v as
+    ReadArr v as                    -> tab $ if (varRate v /= Sr) then res $= ppReadArr v as else res <+> text "strcpy" <+> ppReadArr v as 
     WriteArr v as b                 -> tab $ ppWriteArr v as b
     WriteInitArr v as b             -> tab $ ppWriteInitArr v as b
     TfmArr isInit v op [a,b]| isInfix  op  -> tab $ ppTfmArrOut isInit v <+> binary (infoName op) a b
@@ -170,9 +170,14 @@ ppTfmArrOut isInit v = ppVar v <> (if isInit then (text "[]") else empty)
 
 ppArrIndex v as = ppVar v <> (hcat $ fmap brackets as)
 ppArrVar n v = ppVar v <> (hcat $ replicate n $ text "[]")
+
 ppReadArr v as = ppArrIndex v as
-ppWriteArr v as b = ppArrIndex v as <+> equals <+> b
-ppWriteInitArr v as b = ppArrIndex v as <+> text "init" <+> b
+
+ppWriteArr v as b = ppArrIndex v as <+> equalsWord <+> b
+    where equalsWord = if (varRate v == Sr) then text "strcpy" else equals
+
+ppWriteInitArr v as b = ppArrIndex v as <+> initWord <+> b
+    where initWord = text $ if (varRate v == Sr) then "strcpy" else "init"
 
 -------------------------------------
 
