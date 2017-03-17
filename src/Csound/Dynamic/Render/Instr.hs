@@ -153,6 +153,9 @@ deduceRate desiredRates expr = case ratedExpExp expr of
         r  -> r
     ReadVar v -> varRate v
     ReadArr v _ -> varRate v
+    ReadMacrosString _ -> Sr
+    ReadMacrosDouble _ -> Ir
+    ReadMacrosInt _ -> Ir
     _  -> Xr    
     where tfmNoRate name rates tab = case sort rates of
               [Xr]  -> tfmNoRate name [Ar] tab                
@@ -190,7 +193,11 @@ rateExp curRate expr = case expr of
     WhileEnd -> WhileEnd    
     EmptyExp -> EmptyExp    
     Verbatim a -> Verbatim a
-
+    InitMacrosString name initValue -> InitMacrosString name initValue
+    InitMacrosDouble name initValue -> InitMacrosDouble name initValue
+    ReadMacrosString name -> ReadMacrosString name
+    ReadMacrosDouble name -> ReadMacrosDouble name
+    ReadMacrosInt name -> ReadMacrosInt name
     ExpBool _           -> error $ msg "ExpBool expression should be substituted"
     ConvertRate _ _ _   -> error $ msg "ConvertRate couldn't be here. It's introduced on the later stages of processing" 
     where ratesFromSignature rate signature = case signature of

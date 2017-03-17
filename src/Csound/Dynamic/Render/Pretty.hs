@@ -160,10 +160,27 @@ ppExp res expr = case fmap ppPrimOrVar expr of
     WhileBegin a                    -> succTab          $ text "while " <> ppCond a <> text " do"
     WhileRefBegin var               -> succTab          $ text "while " <> ppVar var <+> equals <+> text "1" <+> text "do"
     WhileEnd                        -> left >> (tab     $ text "od")
-    EmptyExp                        -> return empty
+    InitMacrosString name initValue -> tab $ initMacros (text name) (text initValue)
+    InitMacrosDouble name initValue -> tab $ initMacros (text name) (double initValue)
+    InitMacrosInt name initValue    -> tab $ initMacros (text name) (int initValue)
+    ReadMacrosString name           -> tab $ res <+> text "strcpy" <+> readMacro name
+    ReadMacrosDouble name           -> tab $ res $= readMacro name
+    ReadMacrosInt name              -> tab $ res $= readMacro name
+    EmptyExp                        -> return empty    
     Verbatim str                    -> return $ text str
     x -> error $ "unknown expression: " ++ show x
+
+
+-- pp macros
  
+readMacro name = char '$' <> text name
+
+initMacros name initValue = vcat 
+    [ text "#ifndef" <+> name
+    , text "#define " <+> name <+> char '#' <> initValue <> char '#'
+    , text "#end"
+    ]
+
 -- pp arrays
 
 ppTfmArrOut isInit v = ppVar v <> (if isInit then (text "[]") else empty)

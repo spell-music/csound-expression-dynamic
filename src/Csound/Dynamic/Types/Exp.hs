@@ -177,6 +177,13 @@ data MainExp a
     | Starts
     | Seq a a
     | Ends a
+    -- | read macros arguments
+    | InitMacrosInt String Int
+    | InitMacrosDouble String Double
+    | InitMacrosString String String
+    | ReadMacrosInt String
+    | ReadMacrosDouble String
+    | ReadMacrosString String
     deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)  
 
 type IsArrInit = Bool

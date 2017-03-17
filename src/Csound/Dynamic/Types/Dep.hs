@@ -10,7 +10,11 @@ module Csound.Dynamic.Types.Dep(
 
     -- * Arrays
     newLocalArrVar, newTmpArrVar,
-    readArr, readOnlyArr, writeArr, writeInitArr, initArr, appendArrBy
+    readArr, readOnlyArr, writeArr, writeInitArr, initArr, appendArrBy,
+
+    -- * Read macros    
+    readMacrosDouble, readMacrosInt, readMacrosString, 
+    initMacrosDouble, initMacrosString, initMacrosInt
 ) where
 
 import Control.Applicative
@@ -170,3 +174,32 @@ initArr v xs = depT_ $ noRate $ InitArr v $ fmap toPrimOr xs
 
 appendArrBy :: Monad m => (E -> E -> E) -> Var -> [E] -> E -> DepT m () 
 appendArrBy op v ixs x = writeArr v ixs . op x =<< readArr v ixs
+
+--------------------------------------------------
+-- read global macros arguments
+
+readMacrosDouble :: String -> E
+readMacrosDouble = readMacrosBy ReadMacrosDouble Ir
+
+readMacrosInt :: String -> E
+readMacrosInt = readMacrosBy ReadMacrosInt Ir
+
+readMacrosString :: String -> E
+readMacrosString = readMacrosBy ReadMacrosString Sr
+
+initMacrosDouble :: Monad m => String -> Double -> DepT m ()
+initMacrosDouble = initMacrosBy InitMacrosDouble
+
+initMacrosString :: Monad m => String -> String -> DepT m ()
+initMacrosString = initMacrosBy InitMacrosString
+
+initMacrosInt :: Monad m => String -> Int -> DepT m ()
+initMacrosInt = initMacrosBy InitMacrosInt
+
+readMacrosBy :: (String -> Exp E) -> Rate -> String -> E
+readMacrosBy readMacro rate name = withRate rate $ readMacro name
+
+initMacrosBy :: Monad m => (String -> a -> Exp E) -> String -> a -> DepT m ()
+initMacrosBy maker name value = depT_ $ noRate $ maker name value
+
+   
