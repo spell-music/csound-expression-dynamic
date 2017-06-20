@@ -9,7 +9,7 @@ module Csound.Dynamic.Types.Flags(
 
     -- * Realtime Audio Input/Output
     Rtaudio(..), PulseAudio(..),
-       
+
     -- * MIDI File Input/Ouput
     MidiIO(..),
 
@@ -44,15 +44,16 @@ data Flags = Flags
     , midiRT            :: MidiRT
     , rtmidi            :: Maybe Rtmidi
     , displays          :: Displays
-    , config            :: Config 
-    , flagsVerbatim     :: Maybe String }
+    , config            :: Config
+    , flagsVerbatim     :: Maybe String
+    } deriving (Eq, Show, Read)
 
 instance Default Flags where
     def = Flags def def def def def def def def def def
 
 instance Monoid Flags where
     mempty = def
-    mappend a b = Flags 
+    mappend a b = Flags
         { audioFileOutput   = mappend (audioFileOutput a) (audioFileOutput b)
         , idTags            = mappend (idTags a) (idTags b)
         , rtaudio           = rtaudio a <|> rtaudio b
@@ -62,7 +63,8 @@ instance Monoid Flags where
         , rtmidi            = rtmidi a <|> rtmidi b
         , displays          = mappend (displays a) (displays b)
         , config            = mappend (config a) (config b)
-        , flagsVerbatim     = mappend (flagsVerbatim a) (flagsVerbatim b) }
+        , flagsVerbatim     = mappend (flagsVerbatim a) (flagsVerbatim b)
+        }
 
 -- Audio file output
 
@@ -73,14 +75,15 @@ data AudioFileOutput = AudioFileOutput
     , input             :: Maybe String
     , nosound           :: Bool
     , nopeaks           :: Bool
-    , dither            :: Maybe Dither }
+    , dither            :: Maybe Dither
+    } deriving (Eq, Show, Read)
 
 instance Default AudioFileOutput where
     def = AudioFileOutput def def def def False False def
- 
+
 instance Monoid AudioFileOutput where
     mempty = def
-    mappend a b = AudioFileOutput 
+    mappend a b = AudioFileOutput
         { formatSamples     = formatSamples a <|> formatSamples b
         , formatType        = formatType a <|> formatType b
         , output            = output a <|> output b
@@ -90,38 +93,40 @@ instance Monoid AudioFileOutput where
         , dither            = dither a <|> dither b }
 
 data FormatHeader = NoHeader | RewriteHeader
+    deriving (Eq, Show, Read)
 
-data FormatSamples 
-    = Bit24 | Alaw | Uchar | Schar 
+data FormatSamples
+    = Bit24 | Alaw | Uchar | Schar
     | FloatSamples | Ulaw | Short | Long
-    deriving (Show)
+    deriving (Eq, Show, Read)
 
 data Dither = Triangular | Uniform
-    deriving (Show)
+    deriving (Eq, Show, Read)
 
-data FormatType 
+data FormatType
     = Aiff | Au | Avr | Caf | Flac | Htk
     | Ircam | Mat4 | Mat5 | Nis | Paf | Pvf
-    | Raw | Sd2 | Sds | Svx | Voc | W64 
+    | Raw | Sd2 | Sds | Svx | Voc | W64
     | Wav | Wavex | Xi
-    deriving (Show)
+    deriving (Eq, Show, Read)
 
 -- Output file id tags
 
-data IdTags = IdTags 
+data IdTags = IdTags
     { idArtist      :: Maybe String
     , idComment     :: Maybe String
     , idCopyright   :: Maybe String
     , idDate        :: Maybe String
     , idSoftware    :: Maybe String
-    , idTitle       :: Maybe String }
+    , idTitle       :: Maybe String
+    } deriving (Eq, Show, Read)
 
 instance Default IdTags where
     def = IdTags def def def def def def
 
 instance Monoid IdTags where
     mempty = def
-    mappend a b = IdTags 
+    mappend a b = IdTags
         { idArtist      = idArtist a <|> idArtist b
         , idComment     = idComment a <|> idComment b
         , idCopyright   = idCopyright a <|> idCopyright b
@@ -131,35 +136,38 @@ instance Monoid IdTags where
 
 -- Realtime Audio Input/Output
 
-data Rtaudio 
-    = PortAudio | Alsa 
-    | Jack 
+data Rtaudio
+    = PortAudio | Alsa
+    | Jack
         { jackClient    :: String
         , jackInport    :: String
-        , jackOutport   :: String } 
+        , jackOutport   :: String }
     | Mme | CoreAudio
     | NoRtaudio
+    deriving (Eq, Show, Read)
 
 data PulseAudio = PulseAudio
     { paServer  :: String
     , paOutput  :: String
-    , paInput   :: String }
+    , paInput   :: String
+    } deriving (Eq, Show, Read)
 
 -- MIDI File Input/Ouput
 
-data MidiIO = MidiIO 
+data MidiIO = MidiIO
     { midiFile          :: Maybe String
     , midiOutFile       :: Maybe String
     , muteTracks        :: Maybe String
     , rawControllerMode :: Bool
-    , terminateOnMidi   :: Bool }
+    , terminateOnMidi   :: Bool
+    } deriving (Eq, Show, Read)
 
 instance Default MidiIO where
     def = MidiIO def def def False False
 
 instance Monoid MidiIO where
     mempty = def
-    mappend a b = MidiIO 
+    mappend a b = MidiIO
         { midiFile          = midiFile a <|> midiFile b
         , midiOutFile       = midiOutFile a <|> midiOutFile b
         , muteTracks        = muteTracks a <|> muteTracks b
@@ -176,15 +184,16 @@ data MidiRT = MidiRT
     , midiKeyPch        :: Maybe Int
     , midiVelocity      :: Maybe Int
     , midiVelocityAmp   :: Maybe Int
-    , midiOutDevice     :: Maybe String }
-   
+    , midiOutDevice     :: Maybe String
+    } deriving (Eq, Show, Read)
+
 instance Default MidiRT where
     def = MidiRT def def def def
                  def def def def
 
 instance Monoid MidiRT where
     mempty = def
-    mappend a b = MidiRT 
+    mappend a b = MidiRT
         { midiDevice        = midiDevice a <|> midiDevice b
         , midiKey           = midiKey a <|> midiKey b
         , midiKeyCps        = midiKeyCps a <|> midiKeyCps b
@@ -195,6 +204,7 @@ instance Monoid MidiRT where
         , midiOutDevice     = midiOutDevice a <|> midiOutDevice b }
 
 data Rtmidi = PortMidi | AlsaMidi | AlsaSeq | CoreMidi | MmeMidi | WinmmeMidi | VirtualMidi | NoRtmidi
+    deriving (Eq, Show, Read)
 
 -- Display
 
@@ -211,12 +221,14 @@ data Displays = Displays
     , mBenchmarks       :: Maybe Int
     , msgColor          :: Bool
     , displayVerbose    :: Bool
-    , listOpcodes       :: Maybe Int }
+    , listOpcodes       :: Maybe Int
+    } deriving (Eq, Show, Read)
 
 data DisplayMode = NoDisplay | PostScriptDisplay | AsciiDisplay
+    deriving (Eq, Show, Read)
 
 instance Default Displays where
-    def = Displays def (Just NoDisplay) 
+    def = Displays def (Just NoDisplay)
             def def def def
             def def def def
             False False
@@ -224,7 +236,7 @@ instance Default Displays where
 
 instance Monoid Displays where
     mempty = def
-    mappend a b = Displays 
+    mappend a b = Displays
         { csdLineNums       = csdLineNums a <|> csdLineNums b
         , displayMode       = displayMode a <|> displayMode b
         , displayHeartbeat  = displayHeartbeat a <|> displayHeartbeat b
@@ -237,7 +249,7 @@ instance Monoid Displays where
         , mBenchmarks       = mBenchmarks a <|> mBenchmarks b
         , msgColor          = mappendBool (msgColor a) (msgColor b)
         , displayVerbose    = mappendBool (displayVerbose a) (displayVerbose b)
-        , listOpcodes       = listOpcodes a <|> listOpcodes b }        
+        , listOpcodes       = listOpcodes a <|> listOpcodes b }
 
 -- Performance Configuration and Control
 
@@ -253,12 +265,13 @@ data Config = Config
     , schedNum      :: Maybe Int
     , strsetN       :: Maybe (Int, String)
     , skipSeconds   :: Maybe Double
-    , setTempo      :: Maybe Int }
+    , setTempo      :: Maybe Int
+    } deriving (Eq, Show, Read)
 
 instance Default Config where
     def = Config def def def def def def def
                  False
-                 def def def def   
+                 def def def def
 
 instance Monoid Config where
     mempty = def
@@ -284,8 +297,8 @@ p :: Pretty b => (a -> Maybe b) -> (a -> Maybe Doc)
 p = (fmap pretty . )
 
 pe :: Pretty b => (a -> b) -> (a -> Maybe Doc)
-pe f = phi . f 
-    where phi x  
+pe f = phi . f
+    where phi x
             | null (show res)   = Nothing
             | otherwise         = Just res
             where res = pretty x
@@ -293,7 +306,7 @@ pe f = phi . f
 bo :: String -> (a -> Bool) -> (a -> Maybe Doc)
 bo property extract a
     | extract a = Just $ text property
-    | otherwise = Nothing    
+    | otherwise = Nothing
 
 mp :: (String -> String) -> (a -> Maybe String) -> (a -> Maybe Doc)
 mp f a = p (fmap f . a)
@@ -306,7 +319,7 @@ p1 pref x = ('-' : pref) ++ (' ' : x)
 
 p2 :: String -> String -> String
 p2 pref x = ('-' : '-' : pref) ++ ('=' : x)
-   
+
 p3 :: String -> String -> String
 p3 pref x = ('-' : '+' : pref) ++ ('=' : x)
 
@@ -315,8 +328,8 @@ fields fs a = hsep $ catMaybes $ fmap ( $ a) fs
 
 instance Pretty Flags where
     pretty = fields
-        [ pe audioFileOutput 
-        , pe idTags 
+        [ pe audioFileOutput
+        , pe idTags
         , p  rtaudio
         , p  pulseAudio
         , pe midiIO
@@ -327,7 +340,7 @@ instance Pretty Flags where
         , p  flagsVerbatim ]
 
 instance Pretty AudioFileOutput where
-    pretty = fields 
+    pretty = fields
         [ pSamplesAndType . (\x -> (formatSamples x, formatType x))
         , mp (p2 "output") output
         , mp (p2 "input")  input
@@ -355,18 +368,18 @@ instance Pretty Dither where
     pretty = pretty . p2 "dither" . show
 
 instance Pretty IdTags where
-    pretty = fields 
+    pretty = fields
         [ mp (p3' "id_artist")       idArtist
         , mp (p3' "id_comment")      idComment
         , mp (p3' "id_copyright")    idCopyright
         , mp (p3' "id_date")         idDate
         , mp (p3' "id_software")     idSoftware
         , mp (p3' "id_title")        idTitle ]
-        where 
+        where
             p3' a b = fmap substSpaces $ p3 a b
             substSpaces x
                 | isSpace x = '_'
-                | otherwise = x  
+                | otherwise = x
 
 instance Pretty Rtaudio where
     pretty x = case x of
@@ -376,9 +389,9 @@ instance Pretty Rtaudio where
         Alsa  -> rt "alsa"
         CoreAudio -> rt "auhal"
         NoRtaudio   -> rt "0"
-        where 
+        where
             rt = text . p3 "rtaudio"
-            jackFields name ins outs = hsep 
+            jackFields name ins outs = hsep
                 [ text $ p3 "jack_client" name
                 , text $ p3 "jack_inportname" ins
                 , text $ p3 "jack_outportname" outs ]
@@ -390,7 +403,7 @@ instance Pretty PulseAudio where
         , p3 "input_stream" $ paInput a ]
 
 instance Pretty MidiIO where
-    pretty = fields 
+    pretty = fields
         [ mp (p2 "midifile") midiFile
         , mp (p2 "midioutfile") midiOutFile
         , mp (p3 "mute_tracks") muteTracks
@@ -407,7 +420,7 @@ instance Pretty MidiRT where
         , mi (p2 "midi-velocity")       midiVelocity
         , mi (p2 "midi-velocity-amp")   midiVelocityAmp
         , mp (p1 "Q")                   midiOutDevice ]
-    
+
 instance Pretty Rtmidi where
     pretty x = text $ p3 "rtmidi" $ case x of
         VirtualMidi -> "virtual"
@@ -421,7 +434,7 @@ instance Pretty Rtmidi where
 
 instance Pretty Displays where
     pretty = fields
-        [ mi (p2 "csd-line-nums")   csdLineNums 
+        [ mi (p2 "csd-line-nums")   csdLineNums
         , p                         displayMode
         , mi (p2 "heartbeat")       displayHeartbeat
         , mi (p2 "messagelevel")    messageLevel
@@ -440,9 +453,9 @@ instance Pretty DisplayMode where
         NoDisplay           -> "--nodisplays"
         PostScriptDisplay   -> "--postscriptdisplay"
         AsciiDisplay        -> "--asciidisplay"
-        
+
 instance Pretty Config where
-    pretty = fields 
+    pretty = fields
         [ mi (p2 "hardwarebufsamps")    hwBuf
         , mi (p2 "iobufsamps")          ioBuf
         , mi (p2 "control-rate")        newKr
@@ -465,7 +478,7 @@ instance Pretty Config where
 -- utilities
 
 firstToLower :: String -> String
-firstToLower x = case x of 
+firstToLower x = case x of
     a:as -> toLower a : as
     []   -> []
 

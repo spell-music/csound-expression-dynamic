@@ -1,5 +1,5 @@
 Name:          csound-expression-dynamic
-Version:       0.3.0
+Version:       0.3.1
 Cabal-Version: >= 1.6
 License:       BSD3
 License-file:  LICENSE
@@ -11,7 +11,7 @@ Build-Type:    Simple
 Category:      Music, Sound
 Maintainer:    <anton.kholomiov@gmail.com>
 
-Description:   
+Description:
 
 Homepage:        https://github.com/anton-k/csound-expression-dynamic
 Bug-Reports:     https://github.com/anton-k/csound-expression-dynamic/issues
@@ -24,7 +24,7 @@ Source-repository head
 Library
   Ghc-Options:    -Wall
   Build-Depends:
-        base >= 4, base < 5, data-default, containers, array, transformers >= 0.3, wl-pprint, 
+        base >= 4, base < 5, data-default, containers, array, transformers >= 0.3, wl-pprint,
         Boolean >= 0.1.0, data-fix, data-fix-cse >= 0.0.2, hashable
   Hs-Source-Dirs:      src/
   Exposed-Modules:
@@ -34,21 +34,21 @@ Library
     Csound.Dynamic.Types.Exp
     Csound.Dynamic.Types.Dep
     Csound.Dynamic.Types.CsdFile
-    Csound.Dynamic.Types.Flags    
+    Csound.Dynamic.Types.Flags
 
     Csound.Dynamic.Build
     Csound.Dynamic.Build.Numeric
     Csound.Dynamic.Build.Logic
 
     Csound.Dynamic.Render
-  
+
   Other-Modules:
     Csound.Dynamic.Tfm.DeduceTypes
     Csound.Dynamic.Tfm.Liveness
     Csound.Dynamic.Tfm.UnfoldMultiOuts
     Csound.Dynamic.Render.Pretty
     Csound.Dynamic.Render.Instr
-     
+
 
 
 
