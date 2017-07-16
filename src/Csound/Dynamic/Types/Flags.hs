@@ -328,15 +328,15 @@ fields fs a = hsep $ catMaybes $ fmap ( $ a) fs
 
 instance Pretty Flags where
     pretty = fields
-        [ pe audioFileOutput
+        [ pe displays
+        , pe config
+        , pe audioFileOutput
         , pe idTags
         , p  rtaudio
         , p  pulseAudio
+        , p  rtmidi
         , pe midiIO
         , pe midiRT
-        , p  rtmidi
-        , pe displays
-        , pe config
         , p  flagsVerbatim ]
 
 instance Pretty AudioFileOutput where

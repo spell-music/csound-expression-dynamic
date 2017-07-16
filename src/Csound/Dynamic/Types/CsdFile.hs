@@ -1,5 +1,5 @@
 -- | The Csound file
-module Csound.Dynamic.Types.CsdFile(            
+module Csound.Dynamic.Types.CsdFile(
     Csd(..), Flags, Orc(..), Sco(..), Plugin(..), Instr(..), InstrBody,
     CsdEvent, csdEventStart, csdEventDur, csdEventContent, csdEventTotalDur,
     intInstr, alwaysOn
@@ -14,7 +14,7 @@ data Csd = Csd
     , csdOrc     :: Orc
     , csdSco     :: Sco
     , csdPlugins :: [Plugin]
-    } 
+    }
 
 data Orc = Orc
     { orcHead           :: InstrBody
@@ -28,7 +28,7 @@ data Instr = Instr
     , instrBody :: InstrBody
     }
 
-data Sco = Sco 
+data Sco = Sco
     { scoTotalDur   :: Maybe Double
     , scoGens       :: [(Int, Gen)]
     , scoNotes      :: [(InstrId, [CsdEvent])]  }

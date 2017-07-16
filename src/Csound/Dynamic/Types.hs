@@ -5,7 +5,7 @@ module Csound.Dynamic.Types(
     module Csound.Dynamic.Types.Flags,
     module Csound.Dynamic.Types.CsdFile
 
-) where 
+) where
 
 import Csound.Dynamic.Types.Exp
 import Csound.Dynamic.Types.Dep

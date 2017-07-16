@@ -1,19 +1,19 @@
 -- | Main types
-{-# Language 
-        DeriveFunctor, DeriveFoldable, DeriveTraversable, 
-        DeriveGeneric, 
+{-# Language
+        DeriveFunctor, DeriveFoldable, DeriveTraversable,
+        DeriveGeneric,
         TypeSynonymInstances, FlexibleInstances #-}
 module Csound.Dynamic.Types.Exp(
-    E, RatedExp(..), isEmptyExp, RatedVar, ratedVar, ratedVarRate, ratedVarId, 
+    E, RatedExp(..), isEmptyExp, RatedVar, ratedVar, ratedVarRate, ratedVarId,
     ratedExp, noRate, withRate, setRate,
-    Exp, toPrimOr, toPrimOrTfm, PrimOr(..), MainExp(..), Name, 
+    Exp, toPrimOr, toPrimOrTfm, PrimOr(..), MainExp(..), Name,
     InstrId(..), intInstrId, ratioInstrId, stringInstrId,
-    VarType(..), Var(..), Info(..), OpcFixity(..), Rate(..), 
-    Signature(..), isInfix, isPrefix,    
+    VarType(..), Var(..), Info(..), OpcFixity(..), Rate(..),
+    Signature(..), isInfix, isPrefix,
     Prim(..), Gen(..), GenId(..),
     Inline(..), InlineExp(..), PreInline(..),
-    BoolExp, CondInfo, CondOp(..), isTrue, isFalse,    
-    NumExp, NumOp(..), Note,    
+    BoolExp, CondInfo, CondOp(..), isTrue, isFalse,
+    NumExp, NumOp(..), Note,
     MultiOut,
     IsArrInit, ArrSize, ArrIndex
 ) where
@@ -31,19 +31,19 @@ import Data.Maybe(isNothing)
 import qualified Data.IntMap as IM
 import Data.Fix
 
-import qualified Csound.Dynamic.Tfm.DeduceTypes as R(Var(..)) 
+import qualified Csound.Dynamic.Tfm.DeduceTypes as R(Var(..))
 
 type Name = String
 type LineNum = Int
 
 -- | An instrument identifier
-data InstrId 
-    = InstrId 
+data InstrId
+    = InstrId
     { instrIdFrac :: Maybe Int
     , instrIdCeil :: Int }
-    | InstrLabel String 
+    | InstrLabel String
     deriving (Show, Eq, Ord, Generic)
-    
+
 -- | Constructs an instrument id with the integer.
 intInstrId :: Int -> InstrId
 intInstrId n = InstrId Nothing n
@@ -58,18 +58,18 @@ stringInstrId = InstrLabel
 
 -- | The inner representation of csound expressions.
 type E = Fix RatedExp
-    
+
 instance Hashable E where
     hashWithSalt s x = s `hashWithSalt` cata hash x
 
-data RatedExp a = RatedExp 
-    { ratedExpRate      :: Maybe Rate       
-        -- ^ Rate (can be undefined or Nothing, 
+data RatedExp a = RatedExp
+    { ratedExpRate      :: Maybe Rate
+        -- ^ Rate (can be undefined or Nothing,
         -- it means that rate should be deduced automatically from the context)
-    , ratedExpDepends   :: Maybe LineNum          
+    , ratedExpDepends   :: Maybe LineNum
         -- ^ Dependency (it is used for expressions with side effects,
         -- value contains the privious statement)
-    , ratedExpExp       :: Exp a    
+    , ratedExpExp       :: Exp a
         -- ^ Main expression
     } deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)
 
@@ -93,7 +93,7 @@ ratedExp r = Fix . RatedExp r Nothing
 
 noRate :: Exp E -> E
 noRate = ratedExp Nothing
-  
+
 withRate :: Rate -> Exp E -> E
 withRate r = ratedExp (Just r)
 
@@ -115,7 +115,7 @@ toPrimOr a = PrimOr $ case ratedExpExp $ unFix a of
     ExpPrim p  -> Left p
     ReadVar v | noDeps -> Left (PrimVar (varRate v) v)
     _         -> Right a
-    where 
+    where
         noDeps = isNothing $ ratedExpDepends $ unFix a
 
 -- | Constructs PrimOr values from the expressions. It does inlining in
@@ -126,7 +126,7 @@ toPrimOrTfm r a = PrimOr $ case ratedExpExp $ unFix a of
     ExpPrim p | (r == Ir || r == Sr) -> Left p
     ReadVar v | noDeps -> Left (PrimVar (varRate v) v)
     _         -> Right a
-    where 
+    where
         noDeps = isNothing $ ratedExpDepends $ unFix a
 
 
@@ -134,18 +134,18 @@ toPrimOrTfm r a = PrimOr $ case ratedExpExp $ unFix a of
 type Exp a = MainExp (PrimOr a)
 
 -- Csound expressions
-data MainExp a     
+data MainExp a
     = EmptyExp
     -- | Primitives
     | ExpPrim Prim
-    -- | Application of the opcode: we have opcode information (Info) and the arguments [a] 
+    -- | Application of the opcode: we have opcode information (Info) and the arguments [a]
     | Tfm Info [a]
     -- | Rate conversion
     | ConvertRate Rate Rate a
     -- | Selects a cell from the tuple, here argument is always a tuple (result of opcode that returns several outputs)
     | Select Rate Int a
     -- | if-then-else
-    | If (CondInfo a) a a    
+    | If (CondInfo a) a a
     -- | Boolean expressions (rendered in infix notation in the Csound)
     | ExpBool (BoolExp a)
     -- | Numerical expressions (rendered in infix notation in the Csound)
@@ -153,9 +153,9 @@ data MainExp a
     -- | Reading/writing a named variable
     | InitVar Var a
     | ReadVar Var
-    | WriteVar Var a  
+    | WriteVar Var a
     -- | Arrays
-    | InitArr Var (ArrSize a)    
+    | InitArr Var (ArrSize a)
     | ReadArr Var (ArrIndex a)
     | WriteArr Var (ArrIndex a) a
     | WriteInitArr Var (ArrIndex a) a
@@ -184,7 +184,7 @@ data MainExp a
     | ReadMacrosInt String
     | ReadMacrosDouble String
     | ReadMacrosString String
-    deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)  
+    deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)
 
 type IsArrInit = Bool
 type ArrSize a = [a]
@@ -195,35 +195,35 @@ isEmptyExp e = isNothing (ratedExpDepends re) && (ratedExpExp re == EmptyExp)
     where re = unFix e
 
 -- Named variable
-data Var 
+data Var
     = Var
         { varType :: VarType    -- global / local
         , varRate :: Rate
-        , varName :: Name } 
-    | VarVerbatim 
+        , varName :: Name }
+    | VarVerbatim
         { varRate :: Rate
-        , varName :: Name        
-        } deriving (Show, Eq, Ord, Generic)       
-        
+        , varName :: Name
+        } deriving (Show, Eq, Ord, Generic)
+
 -- Variables can be global (then we have to prefix them with `g` in the rendering) or local.
 data VarType = LocalVar | GlobalVar
     deriving (Show, Eq, Ord, Generic)
 
 -- Opcode information.
-data Info = Info 
+data Info = Info
     -- Opcode name
-    { infoName          :: Name     
+    { infoName          :: Name
     -- Opcode type signature
     , infoSignature     :: Signature
     -- Opcode can be infix or prefix
     , infoOpcFixity     :: OpcFixity
-    } deriving (Show, Eq, Ord, Generic)           
-  
+    } deriving (Show, Eq, Ord, Generic)
+
 isPrefix, isInfix :: Info -> Bool
 
 isPrefix = (Prefix ==) . infoOpcFixity
 isInfix  = (Infix  ==) . infoOpcFixity
- 
+
 -- Opcode fixity
 data OpcFixity = Prefix | Infix | Opcode
     deriving (Show, Eq, Ord, Generic)
@@ -232,55 +232,55 @@ data OpcFixity = Prefix | Infix | Opcode
 data Rate   -- rate:
     ----------------------------
     = Xr    -- audio or control (and I use it for opcodes that produce no output, ie procedures)
-    | Ar    -- audio 
-    | Kr    -- control 
-    | Ir    -- init (constants)    
+    | Ar    -- audio
+    | Kr    -- control
+    | Ir    -- init (constants)
     | Sr    -- strings
     | Fr    -- spectrum (for pvs opcodes)
-    | Wr    -- special spectrum 
+    | Wr    -- special spectrum
     | Tvar  -- I don't understand what it is (fix me) used with Fr
     deriving (Show, Eq, Ord, Enum, Bounded, Generic)
-    
+
 -- Opcode type signature. Opcodes can produce single output (SingleRate) or multiple outputs (MultiRate).
--- In Csound opcodes are often have several signatures. That is one opcode name can produce signals of the 
+-- In Csound opcodes are often have several signatures. That is one opcode name can produce signals of the
 -- different rate (it depends on the type of the outputs). Here we assume (to make things easier) that
--- opcodes that MultiRate-opcodes can produce only the arguments of the same type. 
-data Signature 
+-- opcodes that MultiRate-opcodes can produce only the arguments of the same type.
+data Signature
     -- For SingleRate-opcodes type signature is the Map from output rate to the rate of the arguments.
     -- With it we can deduce the type of the argument from the type of the output.
-    = SingleRate (Map Rate [Rate]) 
-    -- For MultiRate-opcodes Map degenerates to the singleton. We have only one link. 
+    = SingleRate (Map Rate [Rate])
+    -- For MultiRate-opcodes Map degenerates to the singleton. We have only one link.
     -- It contains rates for outputs and inputs.
-    | MultiRate 
-        { outMultiRate :: [Rate] 
-        , inMultiRate  :: [Rate] } 
+    | MultiRate
+        { outMultiRate :: [Rate]
+        , inMultiRate  :: [Rate] }
     deriving (Show, Eq, Ord)
 
 instance Hashable Signature where
     hashWithSalt s x = case x of
         SingleRate m -> s `hashWithSalt` (0 :: Int) `hashWithSalt` (hash $ fmap (\b -> (take 5 b)) $ head' $ toList m)
         MultiRate a b -> s `hashWithSalt` (1 :: Int) `hashWithSalt` (hash $ take 5 a) `hashWithSalt` (hash $ take 5 b)
-        where 
+        where
             head' xs = case xs of
                 [] -> Nothing
                 x:_ -> Just x
 
 -- Primitive values
-data Prim 
+data Prim
     -- instrument p-arguments
-    = P Int 
-    | PString Int       -- >> p-string (read p-string notes at the bottom of the file): 
-    | PrimInt Int 
-    | PrimDouble Double 
-    | PrimString String 
+    = P Int
+    | PString Int       -- >> p-string (read p-string notes at the bottom of the file):
+    | PrimInt Int
+    | PrimDouble Double
+    | PrimString String
     | PrimInstrId InstrId
-    | PrimVar 
-        { primVarTargetRate :: Rate 
+    | PrimVar
+        { primVarTargetRate :: Rate
         , primVar           :: Var }
     deriving (Show, Eq, Ord, Generic)
 
 -- Gen routine.
-data Gen = Gen 
+data Gen = Gen
     { genSize    :: Int
     , genId      :: GenId
     , genArgs    :: [Double]
@@ -296,15 +296,15 @@ type Note = [Prim]
 ------------------------------------------------------------
 -- types for arithmetic and boolean expressions
 
-data Inline a b = Inline 
+data Inline a b = Inline
     { inlineExp :: InlineExp a
-    , inlineEnv :: IM.IntMap b    
+    , inlineEnv :: IM.IntMap b
     } deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 instance (Hashable a, Hashable b) => Hashable (Inline a b) where
-    hashWithSalt s (Inline a m) = s `hashWithSalt` (hash a) `hashWithSalt` (hash $ IM.toList m) 
+    hashWithSalt s (Inline a m) = s `hashWithSalt` (hash a) `hashWithSalt` (hash $ IM.toList m)
 
--- Inlined expression. 
+-- Inlined expression.
 data InlineExp a
     = InlinePrim Int
     | InlineExp a [InlineExp a]
@@ -320,10 +320,10 @@ type BoolExp a = PreInline CondOp a
 type CondInfo a = Inline CondOp a
 
 -- Conditional operators
-data CondOp  
+data CondOp
     = TrueOp | FalseOp | And | Or
     | Equals | NotEquals | Less | Greater | LessEquals | GreaterEquals
-    deriving (Show, Eq, Ord, Generic)    
+    deriving (Show, Eq, Ord, Generic)
 
 isTrue, isFalse :: CondInfo a -> Bool
 
@@ -342,7 +342,7 @@ getCondInfoOp x = case inlineExp x of
 
 type NumExp a = PreInline NumOp a
 
-data NumOp = Add | Sub | Neg | Mul | Div | Pow | Mod 
+data NumOp = Add | Sub | Neg | Mul | Div | Pow | Mod
     deriving (Show, Eq, Ord, Generic)
 
 -------------------------------------------------------
@@ -386,10 +386,10 @@ instance Hashable InstrId
 
 --------------------------------------------------------------
 -- comments
--- 
--- p-string 
 --
---    separate p-param for strings (we need it to read strings from global table) 
+-- p-string
+--
+--    separate p-param for strings (we need it to read strings from global table)
 --    Csound doesn't permits us to use more than four string params so we need to
 --    keep strings in the global table and use `strget` to read them
 

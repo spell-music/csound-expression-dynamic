@@ -42,12 +42,13 @@ Library
 
     Csound.Dynamic.Render
 
+    Csound.Dynamic.Render.Instr
+    Csound.Dynamic.Render.Pretty
   Other-Modules:
     Csound.Dynamic.Tfm.DeduceTypes
     Csound.Dynamic.Tfm.Liveness
     Csound.Dynamic.Tfm.UnfoldMultiOuts
-    Csound.Dynamic.Render.Pretty
-    Csound.Dynamic.Render.Instr
+
 
 
 

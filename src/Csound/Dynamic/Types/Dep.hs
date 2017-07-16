@@ -1,8 +1,8 @@
 -- | Dependency tracking
 module Csound.Dynamic.Types.Dep(
-    DepT(..), LocalHistory(..), runDepT, execDepT, evalDepT,   
+    DepT(..), LocalHistory(..), runDepT, execDepT, evalDepT,
     -- * Dependencies
-    depT, depT_, mdepT, stripDepT, stmtOnlyT, 
+    depT, depT_, mdepT, stripDepT, stmtOnlyT,
 
     -- * Variables
     newLocalVar, newLocalVars,
@@ -12,8 +12,8 @@ module Csound.Dynamic.Types.Dep(
     newLocalArrVar, newTmpArrVar,
     readArr, readOnlyArr, writeArr, writeInitArr, initArr, appendArrBy,
 
-    -- * Read macros    
-    readMacrosDouble, readMacrosInt, readMacrosString, 
+    -- * Read macros
+    readMacrosDouble, readMacrosInt, readMacrosString,
     initMacrosDouble, initMacrosString, initMacrosInt
 ) where
 
@@ -27,10 +27,10 @@ import Data.Fix(Fix(..))
 
 import Csound.Dynamic.Types.Exp
 
--- | Csound's synonym for 'IO'-monad. 'Dep' means Side Effect. 
+-- | Csound's synonym for 'IO'-monad. 'Dep' means Side Effect.
 -- You will bump into 'Dep' trying to read and write to delay lines,
--- making random signals or trying to save your audio to file. 
--- Instrument is expected to return a value of @Dep [Sig]@. 
+-- making random signals or trying to save your audio to file.
+-- Instrument is expected to return a value of @Dep [Sig]@.
 -- So it's okay to do some side effects when playing a note.
 newtype DepT m a = DepT { unDepT :: StateT LocalHistory m a }
 
@@ -43,7 +43,7 @@ instance Default LocalHistory where
     def = LocalHistory start 0 0
 
 instance Monad m => Functor (DepT m) where
-    fmap = liftM 
+    fmap = liftM
 
 instance Monad m => Applicative (DepT m) where
     pure = return
@@ -61,7 +61,7 @@ runDepT a = runStateT (unDepT $ a) def
 
 evalDepT :: (Functor m, Monad m) => DepT m a -> m a
 evalDepT a = evalStateT (unDepT $ a) def
-   
+
 execDepT :: (Functor m, Monad m) => DepT m () -> m E
 execDepT a = fmap expDependency $ execStateT (unDepT $ a) def
 
@@ -80,10 +80,10 @@ depT :: Monad m => E -> DepT m E
 depT a = DepT $ do
     s <- get
     let a1 = Fix $ (unFix a) { ratedExpDepends = Just (newLineNum s) }
-    put $ s { 
-        newLineNum = succ $ newLineNum s, 
+    put $ s {
+        newLineNum = succ $ newLineNum s,
         expDependency = depends (expDependency s) a1 }
-    return a1    
+    return a1
 
 depT_ :: (Monad m) => E -> DepT m ()
 depT_ = fmap (const ()) . depT
@@ -92,13 +92,13 @@ mdepT :: (Monad m) => MultiOut [E] -> MultiOut (DepT m [E])
 mdepT mas = \n -> mapM depT $ ( $ n) mas
 
 stripDepT :: Monad m => DepT m a -> m a
-stripDepT (DepT a) = evalStateT a def 
+stripDepT (DepT a) = evalStateT a def
 
 stmtOnlyT :: Monad m => Exp E -> DepT m ()
 stmtOnlyT stmt = depT_ $ noRate stmt
 
-emptyE :: E 
-emptyE = noRate $ EmptyExp 
+emptyE :: E
+emptyE = noRate $ EmptyExp
 
 -- local variables
 
@@ -117,7 +117,7 @@ newLocalVar rate val = do
 newVar :: Monad m => Rate -> DepT m Var
 newVar rate = DepT $ do
     s <- get
-    let v = Var LocalVar rate (show $ newLocalVarId s)    
+    let v = Var LocalVar rate (show $ newLocalVarId s)
     put $ s { newLocalVarId = succ $ newLocalVarId s }
     return v
 
@@ -127,7 +127,7 @@ newVar rate = DepT $ do
 -- generic funs
 
 writeVar :: Monad m => Var -> E -> DepT m ()
-writeVar v x = depT_ $ noRate $ WriteVar v $ toPrimOr x 
+writeVar v x = depT_ $ noRate $ WriteVar v $ toPrimOr x
 
 readVar :: Monad m => Var -> DepT m E
 readVar v = depT $ noRate $ ReadVar v
@@ -172,7 +172,7 @@ writeInitArr v ixs a = depT_ $ noRate $ WriteInitArr v (fmap toPrimOr ixs) (toPr
 initArr :: Monad m => Var -> [E] -> DepT m ()
 initArr v xs = depT_ $ noRate $ InitArr v $ fmap toPrimOr xs
 
-appendArrBy :: Monad m => (E -> E -> E) -> Var -> [E] -> E -> DepT m () 
+appendArrBy :: Monad m => (E -> E -> E) -> Var -> [E] -> E -> DepT m ()
 appendArrBy op v ixs x = writeArr v ixs . op x =<< readArr v ixs
 
 --------------------------------------------------
@@ -202,4 +202,4 @@ readMacrosBy readMacro rate name = withRate rate $ readMacro name
 initMacrosBy :: Monad m => (String -> a -> Exp E) -> String -> a -> DepT m ()
 initMacrosBy maker name value = depT_ $ noRate $ maker name value
 
-   
+

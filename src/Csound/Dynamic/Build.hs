@@ -1,8 +1,8 @@
 module Csound.Dynamic.Build (
-    
+
     -- * Expression tree
     -- | Working with expression tree
-    toExp, onExp, 
+    toExp, onExp,
 
     -- * Rates
     -- * Queries
@@ -10,7 +10,7 @@ module Csound.Dynamic.Build (
 
     -- * Constructors
     -- | Basic constructors
-    prim, opcPrefix, oprPrefix, oprInfix, 
+    prim, opcPrefix, oprPrefix, oprInfix,
     numExp1, numExp2,
     tfm, tfmNoInlineArgs, pn, withInits,
     double, int, str, verbatim, instrIdE,
@@ -18,7 +18,7 @@ module Csound.Dynamic.Build (
 
     -- ** Opcodes constructors
     Spec1, spec1, opcs, opcsNoInlineArgs, opr1, opr1k, infOpr, oprBy,
-    Specs, specs, MultiOut, mopcs, mo, 
+    Specs, specs, MultiOut, mopcs, mo,
 
     -- * Global init statements
     setSr, setKsmps, setNchnls, setNchnls_i, setKr, setZeroDbfs,
@@ -37,9 +37,9 @@ import Csound.Dynamic.Types.Dep
 
 ------------------------------------------------
 -- basic constructors
-  
+
 prim :: Prim -> E
-prim = noRate . ExpPrim 
+prim = noRate . ExpPrim
 
 opcPrefix :: Name -> Signature -> Info
 opcPrefix name signature = Info name signature Opcode
@@ -65,8 +65,8 @@ getInfoRates a = getInRates $ infoSignature a
 
 tfmNoInlineArgs :: Info -> [E] -> E
 tfmNoInlineArgs info args = noRate $ Tfm info $ fmap (PrimOr . Right) args
-            
-inlineVar :: Var -> E        
+
+inlineVar :: Var -> E
 inlineVar = Fix . RatedExp Nothing Nothing . ReadVar
 
 pn :: Int -> E
@@ -131,7 +131,7 @@ infOpr :: Name -> E -> E -> E
 infOpr name a b = tfm (oprInfix name $ spec1 [(Ar, [Ar, Ar]), (Kr, [Kr, Kr]), (Ir, [Ir, Ir])]) [a, b]
 
 numExp1 :: NumOp -> E -> E
-numExp1 op x = noRate $ ExpNum $ fmap toPrimOr $ PreInline op [x] 
+numExp1 op x = noRate $ ExpNum $ fmap toPrimOr $ PreInline op [x]
 
 numExp2 :: NumOp -> E -> E -> E
 numExp2 op a b = noRate $ ExpNum $ fmap toPrimOr $ PreInline op [a, b]
@@ -148,22 +148,22 @@ infOprArr isArrInit out name a b = tfmArr isArrInit out (oprInfix name $ spec1 [
 type Specs = ([Rate], [Rate])
 
 specs :: Specs -> Signature
-specs = uncurry MultiRate 
+specs = uncurry MultiRate
 
 mopcs :: Name -> Specs -> [E] -> MultiOut [E]
 mopcs name signature as = \numOfOuts -> mo numOfOuts $ tfm (opcPrefix name $ specs signature) as
 
 mo :: Int -> E -> [E]
 mo n e = zipWith (\cellId r -> select cellId r e') [0 ..] outRates
-    where outRates = take n $ getRates $ toExp e          
+    where outRates = take n $ getRates $ toExp e
           e' = onExp (setMultiRate outRates) e
-          
-          setMultiRate rates (Tfm info xs) = Tfm (info{ infoSignature = MultiRate rates ins }) xs 
+
+          setMultiRate rates (Tfm info xs) = Tfm (info{ infoSignature = MultiRate rates ins }) xs
               where ins = case infoSignature info of
                         MultiRate _ a -> a
-                        _ -> error "Tuple.hs: multiOutsSection -- should be multiOut expression" 
-          setMultiRate _ _ = error "Tuple.hs: multiOutsSection -- argument should be Tfm-expression"  
-            
+                        _ -> error "Tuple.hs: multiOutsSection -- should be multiOut expression"
+          setMultiRate _ _ = error "Tuple.hs: multiOutsSection -- argument should be Tfm-expression"
+
           select cellId rate expr = withRate rate $ Select rate cellId (PrimOr $ Right expr)
 
 
@@ -173,7 +173,7 @@ getRates (Tfm info _) = case infoSignature info of
     _ -> error "Build.hs:getRates - argument should be multiOut"
 getRates _ = error "Build.hs:getRates - argument should be Tfm-expression"
 
-    
+
 isMultiOutSignature :: Signature -> Bool
 isMultiOutSignature x = case x of
     MultiRate _ _ -> True
@@ -198,7 +198,7 @@ onExp f x = case unFix x of
 -- global inits
 
 setSr, setKsmps, setNchnls, setNchnls_i, setKr :: Monad m => Int -> DepT m ()
-    
+
 setZeroDbfs :: Monad m => Double -> DepT m  ()
 
 setGlobal :: (Monad m, Show a) => String -> a -> DepT m  ()
