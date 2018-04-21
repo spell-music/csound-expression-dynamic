@@ -1,5 +1,5 @@
 Name:          csound-expression-dynamic
-Version:       0.3.2
+Version:       0.3.3
 Cabal-Version: >= 1.6
 License:       BSD3
 License-file:  LICENSE
@@ -24,7 +24,7 @@ Source-repository head
 Library
   Ghc-Options:    -Wall
   Build-Depends:
-        base >= 4, base < 5, data-default, containers, array, transformers >= 0.3, wl-pprint > 1.2,
+        base >= 4, base < 5, data-default, containers, array, transformers >= 0.3, wl-pprint >= 1.2.1,
         Boolean >= 0.1.0, data-fix, data-fix-cse >= 0.0.2, hashable
   Hs-Source-Dirs:      src/
   Exposed-Modules:
