@@ -1,3 +1,4 @@
+{-# Language CPP #-}
 -- | Csound's command line flags. See original documentation for detailed overview: <http://www.csounds.com/manual/html/CommandFlagsCategory.html>
 module Csound.Dynamic.Types.Flags(
     Flags(..),
@@ -51,20 +52,36 @@ data Flags = Flags
 instance Default Flags where
     def = Flags def def def def def def def def def def
 
+
+#if MIN_VERSION_base(4,11,0)
+instance Semigroup Flags where
+  x <> y          = x `mappendFlags` y
+
 instance Monoid Flags where
-    mempty = def
-    mappend a b = Flags
-        { audioFileOutput   = mappend (audioFileOutput a) (audioFileOutput b)
-        , idTags            = mappend (idTags a) (idTags b)
-        , rtaudio           = rtaudio a <|> rtaudio b
-        , pulseAudio        = pulseAudio a <|> pulseAudio b
-        , midiIO            = mappend (midiIO a) (midiIO b)
-        , midiRT            = mappend (midiRT a) (midiRT b)
-        , rtmidi            = rtmidi a <|> rtmidi b
-        , displays          = mappend (displays a) (displays b)
-        , config            = mappend (config a) (config b)
-        , flagsVerbatim     = mappend (flagsVerbatim a) (flagsVerbatim b)
-        }
+    mempty  = def
+
+#else
+
+instance Monoid Flags where
+    mempty  = def
+    mappend = mappendFlags
+
+#endif
+
+mappendFlags :: Flags -> Flags -> Flags
+mappendFlags a b = Flags
+    { audioFileOutput   = mappend (audioFileOutput a) (audioFileOutput b)
+    , idTags            = mappend (idTags a) (idTags b)
+    , rtaudio           = rtaudio a <|> rtaudio b
+    , pulseAudio        = pulseAudio a <|> pulseAudio b
+    , midiIO            = mappend (midiIO a) (midiIO b)
+    , midiRT            = mappend (midiRT a) (midiRT b)
+    , rtmidi            = rtmidi a <|> rtmidi b
+    , displays          = mappend (displays a) (displays b)
+    , config            = mappend (config a) (config b)
+    , flagsVerbatim     = mappend (flagsVerbatim a) (flagsVerbatim b)
+    }
+
 
 -- Audio file output
 
@@ -81,16 +98,30 @@ data AudioFileOutput = AudioFileOutput
 instance Default AudioFileOutput where
     def = AudioFileOutput def def def def False False def
 
+#if MIN_VERSION_base(4,11,0)
+instance Semigroup AudioFileOutput where
+  x <> y          = x `mappendAudioFileOutput` y
+
 instance Monoid AudioFileOutput where
-    mempty = def
-    mappend a b = AudioFileOutput
-        { formatSamples     = formatSamples a <|> formatSamples b
-        , formatType        = formatType a <|> formatType b
-        , output            = output a <|> output b
-        , input             = input a <|> input b
-        , nosound           = mappendBool (nosound a) (nosound b)
-        , nopeaks           = mappendBool (nopeaks a) (nopeaks b)
-        , dither            = dither a <|> dither b }
+    mempty  = def
+
+#else
+
+instance Monoid AudioFileOutput where
+    mempty  = def
+    mappend = mappendAudioFileOutput
+
+#endif
+
+mappendAudioFileOutput :: AudioFileOutput -> AudioFileOutput -> AudioFileOutput
+mappendAudioFileOutput a b = AudioFileOutput
+    { formatSamples     = formatSamples a <|> formatSamples b
+    , formatType        = formatType a <|> formatType b
+    , output            = output a <|> output b
+    , input             = input a <|> input b
+    , nosound           = mappendBool (nosound a) (nosound b)
+    , nopeaks           = mappendBool (nopeaks a) (nopeaks b)
+    , dither            = dither a <|> dither b }
 
 data FormatHeader = NoHeader | RewriteHeader
     deriving (Eq, Show, Read)
@@ -124,15 +155,29 @@ data IdTags = IdTags
 instance Default IdTags where
     def = IdTags def def def def def def
 
+#if MIN_VERSION_base(4,11,0)
+instance Semigroup IdTags where
+  x <> y          = x `mappendIdTags` y
+
 instance Monoid IdTags where
-    mempty = def
-    mappend a b = IdTags
-        { idArtist      = idArtist a <|> idArtist b
-        , idComment     = idComment a <|> idComment b
-        , idCopyright   = idCopyright a <|> idCopyright b
-        , idDate        = idDate a <|> idDate b
-        , idSoftware    = idSoftware a <|> idSoftware b
-        , idTitle       = idTitle a <|> idTitle b }
+    mempty  = def
+
+#else
+
+instance Monoid IdTags where
+    mempty  = def
+    mappend = mappendIdTags
+
+#endif
+
+mappendIdTags :: IdTags -> IdTags -> IdTags
+mappendIdTags a b = IdTags
+    { idArtist      = idArtist a <|> idArtist b
+    , idComment     = idComment a <|> idComment b
+    , idCopyright   = idCopyright a <|> idCopyright b
+    , idDate        = idDate a <|> idDate b
+    , idSoftware    = idSoftware a <|> idSoftware b
+    , idTitle       = idTitle a <|> idTitle b }
 
 -- Realtime Audio Input/Output
 
@@ -165,14 +210,29 @@ data MidiIO = MidiIO
 instance Default MidiIO where
     def = MidiIO def def def False False
 
+
+#if MIN_VERSION_base(4,11,0)
+instance Semigroup MidiIO where
+  x <> y          = x `mappendMidiIO` y
+
 instance Monoid MidiIO where
-    mempty = def
-    mappend a b = MidiIO
-        { midiFile          = midiFile a <|> midiFile b
-        , midiOutFile       = midiOutFile a <|> midiOutFile b
-        , muteTracks        = muteTracks a <|> muteTracks b
-        , rawControllerMode = mappendBool (rawControllerMode a)  (rawControllerMode b)
-        , terminateOnMidi   = mappendBool (terminateOnMidi a) (terminateOnMidi b) }
+    mempty  = def
+
+#else
+
+instance Monoid MidiIO where
+    mempty  = def
+    mappend = mappendMidiIO
+
+#endif
+
+mappendMidiIO :: MidiIO -> MidiIO -> MidiIO
+mappendMidiIO a b = MidiIO
+    { midiFile          = midiFile a <|> midiFile b
+    , midiOutFile       = midiOutFile a <|> midiOutFile b
+    , muteTracks        = muteTracks a <|> muteTracks b
+    , rawControllerMode = mappendBool (rawControllerMode a)  (rawControllerMode b)
+    , terminateOnMidi   = mappendBool (terminateOnMidi a) (terminateOnMidi b) }
 
 -- MIDI Realtime Input/Ouput
 
@@ -191,17 +251,31 @@ instance Default MidiRT where
     def = MidiRT def def def def
                  def def def def
 
+#if MIN_VERSION_base(4,11,0)
+instance Semigroup MidiRT where
+  x <> y          = x `mappendMidiRT` y
+
 instance Monoid MidiRT where
-    mempty = def
-    mappend a b = MidiRT
-        { midiDevice        = midiDevice a <|> midiDevice b
-        , midiKey           = midiKey a <|> midiKey b
-        , midiKeyCps        = midiKeyCps a <|> midiKeyCps b
-        , midiKeyOct        = midiKeyOct a <|> midiKeyOct b
-        , midiKeyPch        = midiKeyPch a <|> midiKeyPch b
-        , midiVelocity      = midiVelocity a <|> midiVelocity b
-        , midiVelocityAmp   = midiVelocityAmp a <|> midiVelocityAmp b
-        , midiOutDevice     = midiOutDevice a <|> midiOutDevice b }
+    mempty  = def
+
+#else
+
+instance Monoid MidiRT where
+    mempty  = def
+    mappend = mappendMidiRT
+
+#endif
+
+mappendMidiRT :: MidiRT -> MidiRT -> MidiRT
+mappendMidiRT a b = MidiRT
+    { midiDevice        = midiDevice a <|> midiDevice b
+    , midiKey           = midiKey a <|> midiKey b
+    , midiKeyCps        = midiKeyCps a <|> midiKeyCps b
+    , midiKeyOct        = midiKeyOct a <|> midiKeyOct b
+    , midiKeyPch        = midiKeyPch a <|> midiKeyPch b
+    , midiVelocity      = midiVelocity a <|> midiVelocity b
+    , midiVelocityAmp   = midiVelocityAmp a <|> midiVelocityAmp b
+    , midiOutDevice     = midiOutDevice a <|> midiOutDevice b }
 
 data Rtmidi = PortMidi | AlsaMidi | AlsaSeq | CoreMidi | MmeMidi | WinmmeMidi | VirtualMidi | NoRtmidi
     deriving (Eq, Show, Read)
@@ -234,22 +308,37 @@ instance Default Displays where
             False False
             def
 
+#if MIN_VERSION_base(4,11,0)
+instance Semigroup Displays where
+  x <> y          = x `mappendDisplays` y
+
 instance Monoid Displays where
-    mempty = def
-    mappend a b = Displays
-        { csdLineNums       = csdLineNums a <|> csdLineNums b
-        , displayMode       = displayMode a <|> displayMode b
-        , displayHeartbeat  = displayHeartbeat a <|> displayHeartbeat b
-        , messageLevel      = messageLevel a <|> messageLevel b
-        , mAmps             = mAmps a <|> mAmps b
-        , mRange            = mRange a <|> mRange b
-        , mWarnings         = mWarnings a <|> mWarnings b
-        , mDb               = mDb a <|> mDb b
-        , mColours          = mColours a <|> mColours b
-        , mBenchmarks       = mBenchmarks a <|> mBenchmarks b
-        , msgColor          = mappendBool (msgColor a) (msgColor b)
-        , displayVerbose    = mappendBool (displayVerbose a) (displayVerbose b)
-        , listOpcodes       = listOpcodes a <|> listOpcodes b }
+    mempty  = def
+
+#else
+
+instance Monoid Displays where
+    mempty  = def
+    mappend = mappendDisplays
+
+#endif
+
+
+mappendDisplays :: Displays -> Displays -> Displays
+mappendDisplays a b = Displays
+    { csdLineNums       = csdLineNums a <|> csdLineNums b
+    , displayMode       = displayMode a <|> displayMode b
+    , displayHeartbeat  = displayHeartbeat a <|> displayHeartbeat b
+    , messageLevel      = messageLevel a <|> messageLevel b
+    , mAmps             = mAmps a <|> mAmps b
+    , mRange            = mRange a <|> mRange b
+    , mWarnings         = mWarnings a <|> mWarnings b
+    , mDb               = mDb a <|> mDb b
+    , mColours          = mColours a <|> mColours b
+    , mBenchmarks       = mBenchmarks a <|> mBenchmarks b
+    , msgColor          = mappendBool (msgColor a) (msgColor b)
+    , displayVerbose    = mappendBool (displayVerbose a) (displayVerbose b)
+    , listOpcodes       = listOpcodes a <|> listOpcodes b }
 
 -- Performance Configuration and Control
 
@@ -273,21 +362,35 @@ instance Default Config where
                  False
                  def def def def
 
+#if MIN_VERSION_base(4,11,0)
+instance Semigroup Config where
+  x <> y          = x `mappendConfig` y
+
 instance Monoid Config where
-    mempty = def
-    mappend a b = Config
-        { hwBuf     = hwBuf a <|> hwBuf b
-        , ioBuf     = ioBuf a <|> ioBuf b
-        , newKr     = newKr a <|> newKr b
-        , newSr     = newSr a <|> newSr b
-        , scoreIn   = scoreIn a <|> scoreIn b
-        , omacro    = omacro a <|> omacro b
-        , smacro    = smacro a <|> smacro b
-        , setSched  = mappendBool (setSched a) (setSched b)
-        , schedNum  = schedNum a <|> schedNum b
-        , strsetN   = strsetN a <|> strsetN b
-        , skipSeconds  = skipSeconds a <|> skipSeconds b
-        , setTempo  = setTempo a <|> setTempo b }
+    mempty  = def
+
+#else
+
+instance Monoid Config where
+    mempty  = def
+    mappend = mappendConfig
+
+#endif
+
+mappendConfig :: Config -> Config -> Config
+mappendConfig a b = Config
+    { hwBuf     = hwBuf a <|> hwBuf b
+    , ioBuf     = ioBuf a <|> ioBuf b
+    , newKr     = newKr a <|> newKr b
+    , newSr     = newSr a <|> newSr b
+    , scoreIn   = scoreIn a <|> scoreIn b
+    , omacro    = omacro a <|> omacro b
+    , smacro    = smacro a <|> smacro b
+    , setSched  = mappendBool (setSched a) (setSched b)
+    , schedNum  = schedNum a <|> schedNum b
+    , strsetN   = strsetN a <|> strsetN b
+    , skipSeconds  = skipSeconds a <|> skipSeconds b
+    , setTempo  = setTempo a <|> setTempo b }
 
 ----------------------------------------------------
 -- rendering

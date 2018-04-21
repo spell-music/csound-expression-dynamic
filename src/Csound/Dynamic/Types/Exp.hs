@@ -2,7 +2,9 @@
 {-# Language
         DeriveFunctor, DeriveFoldable, DeriveTraversable,
         DeriveGeneric,
-        TypeSynonymInstances, FlexibleInstances #-}
+        TypeSynonymInstances, FlexibleInstances,
+        TemplateHaskell,
+        CPP #-}
 module Csound.Dynamic.Types.Exp(
     E, RatedExp(..), isEmptyExp, RatedVar, ratedVar, ratedVarRate, ratedVarId,
     ratedExp, noRate, withRate, setRate,
@@ -18,7 +20,9 @@ module Csound.Dynamic.Types.Exp(
     IsArrInit, ArrSize, ArrIndex
 ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
+#endif
 
 import GHC.Generics (Generic)
 import Data.Traversable
@@ -263,7 +267,7 @@ instance Hashable Signature where
         where
             head' xs = case xs of
                 [] -> Nothing
-                x:_ -> Just x
+                value:_ -> Just value
 
 -- Primitive values
 data Prim
@@ -392,6 +396,4 @@ instance Hashable InstrId
 --    separate p-param for strings (we need it to read strings from global table)
 --    Csound doesn't permits us to use more than four string params so we need to
 --    keep strings in the global table and use `strget` to read them
-
-
 

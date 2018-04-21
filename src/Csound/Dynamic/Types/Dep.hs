@@ -1,3 +1,4 @@
+{-# Language CPP #-}
 -- | Dependency tracking
 module Csound.Dynamic.Types.Dep(
     DepT(..), LocalHistory(..), runDepT, execDepT, evalDepT,
@@ -17,7 +18,10 @@ module Csound.Dynamic.Types.Dep(
     initMacrosDouble, initMacrosString, initMacrosInt
 ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
+#endif
+
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
 import Control.Monad(ap, liftM, zipWithM_)
