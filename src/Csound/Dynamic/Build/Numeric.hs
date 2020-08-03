@@ -172,3 +172,4 @@ roundE  = doubleToInt round (opr1 "round")
 fracE   = unOpt (snd . (properFraction :: (Double -> (Int, Double)))) (opr1 "frac")
 intE    = doubleToInt truncate (opr1 "int")
 
+

@@ -77,9 +77,6 @@ start = noRate Starts
 depends :: E -> E -> E
 depends a1 a2 = noRate $ Seq (toPrimOr a1) (toPrimOr a2)
 
-end :: Monad m => E -> DepT m ()
-end a = depT_ $ noRate $ Ends (toPrimOr a)
-
 depT :: Monad m => E -> DepT m E
 depT a = DepT $ do
     s <- get
@@ -100,9 +97,6 @@ stripDepT (DepT a) = evalStateT a def
 
 stmtOnlyT :: Monad m => Exp E -> DepT m ()
 stmtOnlyT stmt = depT_ $ noRate stmt
-
-emptyE :: E
-emptyE = noRate $ EmptyExp
 
 -- local variables
 

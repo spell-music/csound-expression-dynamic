@@ -22,8 +22,8 @@ import Csound.Dynamic.Types.Exp(Rate(..))
 
 liveness :: Traversable f => Int -> Dag f -> Dag f
 liveness lastFreshId as = runST $ do
-	st <- initSt lastFreshId $ analyse lastFreshId as
-	evalStateT (mapM substExp $ countLines $ as) st
+  st <- initSt lastFreshId $ analyse lastFreshId as
+  evalStateT (mapM substExp $ countLines $ as) st
 
 type LineNumber = Int
 
@@ -47,15 +47,15 @@ data IdList = IdList
 allocId :: IdList -> (Int, IdList)
 allocId (IdList is lastId) = (head is, IdList (tail is) (max (head is) lastId))
 
-freeId :: Int -> IdList -> IdList 
+freeId :: Int -> IdList -> IdList
 freeId  n (IdList is lastId) = IdList (insertSorted n is) lastId1
-	where lastId1 = if (n == lastId) then (lastId - 1) else lastId
+  where lastId1 = if (n == lastId) then (lastId - 1) else lastId
 
 insertSorted :: Int -> [Int] -> [Int]
-insertSorted n (a:as) 
-	| n < a  = n : a : as
-	| n == a = a : as
-	| otherwise = a : insertSorted n as 
+insertSorted n (a:as)
+  | n < a  = n : a : as
+  | n == a = a : as
+  | otherwise = a : insertSorted n as
 insertSorted n [] = [n]
 
 -----------------------------------------------
@@ -65,7 +65,7 @@ type StArr s = A.STUArray s Int Int
 type LivenessTable = A.UArray Int Int
 type SubstTable s  = StArr s
 
-data Registers s = Registers 
+data Registers s = Registers
 	{ registers 	:: M.Map Rate IdList
 	, livenessTable :: LivenessTable
 	, substTable 	:: SubstTable s
@@ -92,7 +92,7 @@ lookUpSubst i = do
 
 saveSubst :: Int -> Int -> Memory s ()
 saveSubst from to = do
-	tab <- fmap substTable get 
+	tab <- fmap substTable get
 	lift $ A.writeArray tab from to
 
 substLhs :: Var -> Memory s Var
@@ -110,20 +110,20 @@ substRhs lineNum v = do
 	return v1
 
 allocAndSkipInits :: Var -> Memory s Var
-allocAndSkipInits v 
+allocAndSkipInits v
     | isInit r  = return v
     | otherwise = alloc r
-    where 
+    where
         r = varType v
         isInit x = x == Ir || x == Sr
 
 alloc :: Rate -> Memory s Var
-alloc rate = state $ \mem -> 
+alloc rate = state $ \mem ->
 	let (i, mem1) = allocRegister rate mem
 	in  (D.Var i rate, mem1)
-	where 
+	where
 		allocRegister :: Rate -> Registers s -> (Int, Registers s)
-		allocRegister r mem = (i, onRegs (M.update (const $ Just is) r) mem) 
+		allocRegister r mem = (i, onRegs (M.update (const $ Just is) r) mem)
 			where (i, is) = allocId $ registers mem M.! r
 
 free :: Var -> Memory s ()
@@ -141,7 +141,7 @@ analyse lastFreshId as = A.runSTUArray $ do
 	arr <- A.newArray (0, lastFreshId) 0
 	mapM_ (go arr) $ countLines as
 	return arr
-	where 
+	where
 		go :: Traversable f => StArr s -> (LineNumber, Exp f) -> ST s ()
 		go arr (lineNum, (_, rhs)) =  mapM (countVar arr lineNum) rhs >> return ()
 

@@ -14,7 +14,7 @@ module Csound.Dynamic.Build (
     numExp1, numExp2,
     tfm, tfmNoInlineArgs, pn, withInits,
     double, int, str, verbatim, instrIdE,
-    inlineVar,
+    inlineVar, gInit, gInitDouble,
 
     -- ** Opcodes constructors
     Spec1, spec1, opcs, opcsNoInlineArgs, opr1, opr1k, infOpr, oprBy,

@@ -2,6 +2,7 @@
 {-# Language
         DeriveFunctor, DeriveFoldable, DeriveTraversable,
         DeriveGeneric,
+        StandaloneDeriving,
         TypeSynonymInstances, FlexibleInstances,
         TemplateHaskell,
         CPP #-}
@@ -24,7 +25,7 @@ module Csound.Dynamic.Types.Exp(
 import Control.Applicative
 #endif
 
-import GHC.Generics (Generic)
+import GHC.Generics (Generic, Generic1)
 import Data.Traversable
 import Data.Foldable hiding (concat)
 
@@ -33,7 +34,11 @@ import Data.Hashable
 import Data.Map(Map)
 import Data.Maybe(isNothing)
 import qualified Data.IntMap as IM
+import qualified Data.IntMap.Internal as IM
 import Data.Fix
+import Data.Eq.Deriving
+import Data.Ord.Deriving
+import Data.Hashable.Lifted
 
 import qualified Csound.Dynamic.Tfm.DeduceTypes as R(Var(..))
 
@@ -63,9 +68,6 @@ stringInstrId = InstrLabel
 -- | The inner representation of csound expressions.
 type E = Fix RatedExp
 
-instance Hashable E where
-    hashWithSalt s x = s `hashWithSalt` cata hash x
-
 data RatedExp a = RatedExp
     { ratedExpRate      :: Maybe Rate
         -- ^ Rate (can be undefined or Nothing,
@@ -75,7 +77,7 @@ data RatedExp a = RatedExp
         -- value contains the privious statement)
     , ratedExpExp       :: Exp a
         -- ^ Main expression
-    } deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)
+    } deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic, Generic1)
 
 -- | RatedVar is for pretty printing of the wiring ports.
 type RatedVar = R.Var Rate
@@ -109,7 +111,7 @@ setRate r a = Fix $ (\x -> x { ratedExpRate = Just r }) $ unFix a
 -- | It's a primitive value or something else. It's used for inlining
 -- of the constants (primitive values).
 newtype PrimOr a = PrimOr { unPrimOr :: Either Prim a }
-    deriving (Show, Eq, Ord, Functor, Generic)
+    deriving (Show, Eq, Ord, Functor, Generic, Generic1)
 
 -- | Constructs PrimOr values from the expressions. It does inlining in
 -- case of primitive values.
@@ -188,7 +190,7 @@ data MainExp a
     | ReadMacrosInt String
     | ReadMacrosDouble String
     | ReadMacrosString String
-    deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)
+    deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic, Generic1)
 
 type IsArrInit = Bool
 type ArrSize a = [a]
@@ -303,7 +305,7 @@ type Note = [Prim]
 data Inline a b = Inline
     { inlineExp :: InlineExp a
     , inlineEnv :: IM.IntMap b
-    } deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+    } deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic1)
 
 instance (Hashable a, Hashable b) => Hashable (Inline a b) where
     hashWithSalt s (Inline a m) = s `hashWithSalt` (hash a) `hashWithSalt` (hash $ IM.toList m)
@@ -316,7 +318,7 @@ data InlineExp a
 
 -- Expression as a tree (to be inlined)
 data PreInline a b = PreInline a [b]
-    deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic)
+    deriving (Show, Eq, Ord, Functor, Foldable, Traversable, Generic, Generic1)
 
 -- booleans
 
@@ -387,6 +389,26 @@ instance Hashable a => Hashable (MainExp a)
 instance Hashable a => Hashable (PrimOr a)
 instance Hashable a => Hashable (RatedExp a)
 instance Hashable InstrId
+
+deriving instance Generic1 IM.IntMap
+instance Hashable1 IM.IntMap
+instance Hashable a => Hashable1 (PreInline a)
+instance Hashable a => Hashable1 (Inline a)
+instance Hashable1 RatedExp
+instance Hashable1 MainExp
+instance Hashable1 PrimOr
+
+$(deriveEq1 ''PrimOr)
+$(deriveEq1 ''PreInline)
+$(deriveEq1 ''Inline)
+$(deriveEq1 ''MainExp)
+$(deriveEq1 ''RatedExp)
+
+$(deriveOrd1 ''PrimOr)
+$(deriveOrd1 ''PreInline)
+$(deriveOrd1 ''Inline)
+$(deriveOrd1 ''MainExp)
+$(deriveOrd1 ''RatedExp)
 
 --------------------------------------------------------------
 -- comments
