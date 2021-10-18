@@ -196,10 +196,6 @@ type IsArrInit = Bool
 type ArrSize a = [a]
 type ArrIndex a = [a]
 
-isEmptyExp :: E -> Bool
-isEmptyExp e = isNothing (ratedExpDepends re) && (ratedExpExp re == EmptyExp)
-    where re = unFix e
-
 -- Named variable
 data Var
     = Var
@@ -409,6 +405,10 @@ $(deriveOrd1 ''PreInline)
 $(deriveOrd1 ''Inline)
 $(deriveOrd1 ''MainExp)
 $(deriveOrd1 ''RatedExp)
+
+isEmptyExp :: E -> Bool
+isEmptyExp e = isNothing (ratedExpDepends re) && (ratedExpExp re == EmptyExp)
+    where re = unFix e
 
 --------------------------------------------------------------
 -- comments
