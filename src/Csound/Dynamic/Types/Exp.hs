@@ -387,7 +387,9 @@ instance Hashable a => Hashable (RatedExp a)
 instance Hashable InstrId
 
 deriving instance Generic1 IM.IntMap
+#if !MIN_VERSION_hashable(1,3,4)
 instance Hashable1 IM.IntMap
+#endif
 instance Hashable a => Hashable1 (PreInline a)
 instance Hashable a => Hashable1 (Inline a)
 instance Hashable1 RatedExp
