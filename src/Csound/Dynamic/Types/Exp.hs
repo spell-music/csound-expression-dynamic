@@ -196,10 +196,6 @@ type IsArrInit = Bool
 type ArrSize a = [a]
 type ArrIndex a = [a]
 
-isEmptyExp :: E -> Bool
-isEmptyExp e = isNothing (ratedExpDepends re) && (ratedExpExp re == EmptyExp)
-    where re = unFix e
-
 -- Named variable
 data Var
     = Var
@@ -391,7 +387,9 @@ instance Hashable a => Hashable (RatedExp a)
 instance Hashable InstrId
 
 deriving instance Generic1 IM.IntMap
+#if !MIN_VERSION_hashable(1,3,4)
 instance Hashable1 IM.IntMap
+#endif
 instance Hashable a => Hashable1 (PreInline a)
 instance Hashable a => Hashable1 (Inline a)
 instance Hashable1 RatedExp
@@ -409,6 +407,10 @@ $(deriveOrd1 ''PreInline)
 $(deriveOrd1 ''Inline)
 $(deriveOrd1 ''MainExp)
 $(deriveOrd1 ''RatedExp)
+
+isEmptyExp :: E -> Bool
+isEmptyExp e = isNothing (ratedExpDepends re) && (ratedExpExp re == EmptyExp)
+    where re = unFix e
 
 --------------------------------------------------------------
 -- comments
